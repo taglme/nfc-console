@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { NButton, NCard, NFlex, NInput, NText, useMessage } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -11,6 +12,7 @@ import { type JobDraft } from '../services/capabilities';
 import { CommandStatus } from 'nfc-jsclient/dist/models/commands';
 
 const message = useMessage();
+const { t } = useI18n();
 const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const runs = useRunsStore();
@@ -44,7 +46,7 @@ watch(
 
 async function submitActionJob(jobName: string, steps: Array<{ command: string; params: any }>, kind: 'lock' | 'format') {
     if (!adapters.selectedAdapterId) {
-        message.error('Select an adapter first.');
+        message.error(t('app.selectAdapterFirst'));
         return;
     }
 
@@ -64,11 +66,11 @@ async function submitActionJob(jobName: string, steps: Array<{ command: string; 
             onWarning: (w: string) => message.warning(w),
         });
         if (!res.ok) {
-            message.error(res.error);
+            message.error(res.errorKey ? t(res.errorKey, res.errorParams ?? {}) : res.error);
             return;
         }
         lastJobId.value = res.jobId;
-        message.success('Job submitted.');
+        message.success(t('common.jobSubmitted'));
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -87,28 +89,28 @@ async function onFormat() {
 </script>
 
 <template>
-    <n-card title="Other">
+    <n-card :title="t('other.title')">
         <n-flex vertical style="gap: 12px">
-            <n-card size="small" title="Lock tag">
+            <n-card size="small" :title="t('other.lockTitle')">
                 <n-flex align="center" justify="space-between" :wrap="true">
-                    <n-text depth="3">Permanently lock the tag (irreversible).</n-text>
+                    <n-text depth="3">{{ t('other.lockDesc') }}</n-text>
                     <n-button type="primary" :loading="sendingLock" :disabled="!adapters.selectedAdapterId" @click="onLock">
-                        Lock
+                        {{ t('other.lock') }}
                     </n-button>
                 </n-flex>
             </n-card>
 
-            <n-card size="small" title="Format tag">
+            <n-card size="small" :title="t('other.formatTitle')">
                 <n-flex align="center" justify="space-between" :wrap="true">
-                    <n-text depth="3">Format tag to default state.</n-text>
+                    <n-text depth="3">{{ t('other.formatDesc') }}</n-text>
                     <n-button type="primary" :loading="sendingFormat" :disabled="!adapters.selectedAdapterId" @click="onFormat">
-                        Format
+                        {{ t('other.format') }}
                     </n-button>
                 </n-flex>
             </n-card>
 
             <div>
-                <n-text depth="3">Last run</n-text>
+                <n-text depth="3">{{ t('other.lastRun') }}</n-text>
                 <n-input type="textarea" readonly :value="resultsText" :autosize="{ minRows: 6, maxRows: 12 }" />
             </div>
         </n-flex>

@@ -8,11 +8,14 @@
     "wsDisconnectedWarn": "WebSocket отключён. Job можно отправить, но результаты могут не появиться, пока WS не подключён."
   },
   "menu": {
-    "console": "Console",
-    "read": "Read",
-    "write": "Write",
-    "dump": "Dump",
-    "other": "Other"
+    "console": "Консоль",
+    "read": "Чтение",
+    "write": "Запись",
+    "dump": "Дамп",
+    "other": "Другое"
+  },
+  "errors": {
+    "rateLimit": "Достигнут лимит запросов. Попробуйте снова примерно через {seconds}с."
   },
   "common": {
     "apply": "Применить",
@@ -26,19 +29,39 @@
     "disconnected": "отключён",
     "save": "Сохранить",
     "clear": "Очистить",
-    "load": "Загрузить"
+    "load": "Загрузить",
+    "jobSubmitted": "Job отправлен.",
+    "yes": "да",
+    "no": "нет",
+    "cancel": "Отмена"
   },
   "console": {
-    "title": "Console",
+    "title": "Консоль",
     "target": "Цель",
     "output": "Формат",
     "send": "Отправить",
     "commands": "Команды (HEX, по одной в строке)",
     "results": "Результаты",
-    "resultsPlaceholder": "Результаты выполнения появятся здесь"
+    "resultsPlaceholder": "Результаты выполнения появятся здесь",
+    "emptyCommands": "Введите хотя бы одну HEX команду.",
+    "targetTag": "Тег",
+    "targetAdapter": "Адаптер",
+    "formatHex": "HEX",
+    "formatAscii": "ASCII",
+    "statusSuccess": "успех",
+    "statusError": "ошибка: {message}",
+    "statusUnknown": "неизвестно",
+    "snippets": "Сниппеты",
+    "snippetsTagTitle": "Сниппеты для тега",
+    "snippetsAdapterTitle": "Сниппеты для адаптера",
+    "loadingSnippets": "Загрузка сниппетов…",
+    "noSnippets": "Сниппетов нет.",
+    "load": "Загрузить",
+    "save": "Сохранить",
+    "loadedCommands": "Команды загружены."
   },
   "read": {
-    "title": "Read",
+    "title": "Чтение",
     "read": "Прочитать",
     "recordsView": "Вид записей",
     "tags": "Теги",
@@ -46,7 +69,11 @@
     "noNdef": "Нет NDEF данных.",
     "readonly": "Только чтение",
     "compact": "Коротко",
-    "json": "JSON"
+    "json": "JSON",
+    "tagId": "Tag ID",
+    "uid": "UID",
+    "tech": "Tech",
+    "record": "Запись"
   },
   "write": {
     "title": "Write",
@@ -58,10 +85,14 @@
     "modalTitle": "NDEF запись",
     "type": "Тип",
     "dataJson": "Данные (JSON)",
-    "cancel": "Отмена"
+    "cancel": "Отмена",
+    "invalidJson": "Некорректный JSON в данных записи.",
+    "invalidFileArray": "Некорректный файл: ожидается JSON-массив",
+    "loadedRecords": "Записи загружены.",
+    "emptyRecords": "Добавьте хотя бы одну NDEF запись."
   },
   "dump": {
-    "title": "Dump",
+    "title": "Дамп",
     "scan": "Сканировать",
     "output": "Вывод",
     "placeholder": "Дамп появится здесь",
@@ -70,7 +101,7 @@
     "memoryPages": "Страницы памяти"
   },
   "other": {
-    "title": "Other",
+    "title": "Другое",
     "lockTitle": "Блокировка",
     "lockDesc": "Перманентно заблокировать тег (необратимо).",
     "lock": "Заблокировать",

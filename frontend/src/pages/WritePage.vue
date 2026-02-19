@@ -147,7 +147,7 @@ function saveDraft() {
     try {
         parsed = JSON.parse(draftDataText.value);
     } catch (e) {
-        message.error('Invalid JSON in record data.');
+        message.error(t('write.invalidJson'));
         return;
     }
 
@@ -233,11 +233,11 @@ async function loadFromFile(ev: Event) {
     try {
         const parsed = JSON.parse(text);
         if (!Array.isArray(parsed)) {
-            message.error('Invalid file: expected JSON array');
+            message.error(t('write.invalidFileArray'));
             return;
         }
         records.value = parsed;
-        message.success('Loaded records.');
+        message.success(t('write.loadedRecords'));
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -267,7 +267,7 @@ async function onWrite() {
         return;
     }
     if (records.value.length === 0) {
-        message.error('Add at least one NDEF record.');
+        message.error(t('write.emptyRecords'));
         return;
     }
 
@@ -313,11 +313,11 @@ async function onWrite() {
             onWarning: w => message.warning(w),
         });
         if (!res.ok) {
-            message.error(res.error);
+            message.error(res.errorKey ? t(res.errorKey, res.errorParams ?? {}) : res.error);
             return;
         }
         lastJobId.value = res.jobId;
-        message.success('Write job submitted.');
+        message.success(t('common.jobSubmitted'));
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {

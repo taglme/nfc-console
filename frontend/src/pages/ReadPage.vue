@@ -12,6 +12,7 @@ import {
     NText,
     useMessage,
 } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -25,6 +26,7 @@ import type { TagResource } from 'nfc-jsclient/dist/models/tags';
 import type { NdefRecordResource, NdefResource } from 'nfc-jsclient/dist/models/ndefconv';
 
 const message = useMessage();
+const { t } = useI18n();
 const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const runs = useRunsStore();
@@ -65,7 +67,7 @@ watch(
 
 async function onRead() {
     if (!adapters.selectedAdapterId) {
-        message.error('Select an adapter first.');
+        message.error(t('app.selectAdapterFirst'));
         return;
     }
 
@@ -91,11 +93,11 @@ async function onRead() {
             onWarning: w => message.warning(w),
         });
         if (!res.ok) {
-            message.error(res.error);
+            message.error(res.errorKey ? t(res.errorKey, res.errorParams ?? {}) : res.error);
             return;
         }
         lastJobId.value = res.jobId;
-        message.success('Read job submitted.');
+        message.success(t('common.jobSubmitted'));
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -108,30 +110,30 @@ function openRecord(r: NdefRecordResource) {
     recordModalOpen.value = true;
 }
 
-const tagColumns = [
+const tagColumns = computed(() => [
     {
-        title: 'Tag ID',
+        title: t('read.tagId'),
         key: 'tag_id',
     },
     {
-        title: 'UID',
+        title: t('read.uid'),
         key: 'uid',
         render: (row: any) => (row.uid ? base64ToHex(row.uid) : ''),
     },
     {
-        title: 'Tech',
+        title: t('read.tech'),
         key: 'tech',
         render: (row: any) => row.tech ?? '',
     },
-];
+]);
 
 const outputMode = ref<'compact' | 'json'>('compact');
 const recordList = computed(() => ndef.value?.message ?? []);
 
-const recordOptions = [
-    { label: 'Compact', value: 'compact' },
-    { label: 'JSON', value: 'json' },
-];
+const recordOptions = computed(() => [
+    { label: t('read.compact'), value: 'compact' },
+    { label: t('read.json'), value: 'json' },
+]);
 
 function recordLabel(r: NdefRecordResource): string {
     if (outputMode.value === 'json') return JSON.stringify(r);
@@ -152,32 +154,32 @@ function recordLabel(r: NdefRecordResource): string {
 </script>
 
 <template>
-    <n-card title="Read">
+    <n-card :title="t('read.title')">
         <n-flex vertical style="gap: 12px">
             <n-flex align="center" justify="space-between" :wrap="true">
                 <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-button type="primary" :disabled="!canRead" :loading="sending" @click="onRead">Read</n-button>
-                    <n-text depth="3" v-if="license.hostTier">Tier: {{ license.hostTier }}</n-text>
+                    <n-button type="primary" :disabled="!canRead" :loading="sending" @click="onRead">{{ t('read.read') }}</n-button>
+                    <n-text depth="3" v-if="license.hostTier">{{ t('common.tier') }}: {{ license.hostTier }}</n-text>
                 </n-flex>
 
                 <n-flex align="center" :wrap="false" style="gap: 8px">
-                    <n-text depth="3">Records view:</n-text>
+                    <n-text depth="3">{{ t('read.recordsView') }}:</n-text>
                     <n-select v-model:value="outputMode" :options="recordOptions" style="width: 140px" />
                 </n-flex>
             </n-flex>
 
             <div>
-                <n-text depth="3">Tags</n-text>
+                <n-text depth="3">{{ t('read.tags') }}</n-text>
                 <n-data-table :columns="tagColumns" :data="tags" :bordered="false" />
             </div>
 
             <div>
-                <n-text depth="3">NDEF</n-text>
+                <n-text depth="3">{{ t('read.ndef') }}</n-text>
                 <div v-if="!ndef">
-                    <n-text depth="3">No NDEF data.</n-text>
+                    <n-text depth="3">{{ t('read.noNdef') }}</n-text>
                 </div>
                 <div v-else>
-                    <n-text depth="3">Read-only: {{ ndef.read_only ? 'yes' : 'no' }}</n-text>
+                    <n-text depth="3">{{ t('read.readonly') }}: {{ ndef.read_only ? t('common.yes') : t('common.no') }}</n-text>
                     <n-list bordered>
                         <n-list-item v-for="(r, idx) in recordList" :key="idx" @click="openRecord(r)">
                             {{ idx + 1 }}. {{ recordLabel(r) }}
@@ -187,7 +189,7 @@ function recordLabel(r: NdefRecordResource): string {
             </div>
         </n-flex>
 
-        <n-modal v-model:show="recordModalOpen" preset="card" title="Record" style="width: 640px">
+        <n-modal v-model:show="recordModalOpen" preset="card" :title="t('read.record')" style="width: 640px">
             <pre style="white-space: pre-wrap; margin: 0">{{ selectedRecord ? JSON.stringify(selectedRecord, null, 2) : '' }}</pre>
         </n-modal>
     </n-card>

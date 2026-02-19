@@ -43,6 +43,20 @@ wails build -nopackage -ldflags "-X main.EmbeddedAppKey=YOUR_APP_KEY"
 
 At runtime, the frontend reads it via a Wails binding (`GetEmbeddedAppKey`).
 
+## Releases
+
+GitHub Releases are built automatically on tags matching `v*` via the workflow `.github/workflows/release.yml`.
+
+Requirements:
+- GitHub Actions secret `EMBEDDED_APP_KEY` (can be empty, but API calls may be rejected by your server).
+
+Create a release:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
 ## License & Capabilities
 
 The app will use `/licenses/access` and enforce host constraints (block/clamp + show messages) as described in the project plan.

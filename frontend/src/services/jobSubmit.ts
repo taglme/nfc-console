@@ -10,6 +10,8 @@ export type SubmitResult =
     | {
           ok: false;
           error: string;
+          errorKey?: string;
+          errorParams?: Record<string, unknown>;
       };
 
 export async function submitJob(params: {
@@ -34,7 +36,9 @@ export async function submitJob(params: {
         const seconds = Math.ceil(rateCheck.waitMs / 1000);
         return {
             ok: false,
-            error: `Rate limit reached. Try again in ~${seconds}s.`,
+            error: 'rate_limit',
+            errorKey: 'errors.rateLimit',
+            errorParams: { seconds },
         };
     }
 

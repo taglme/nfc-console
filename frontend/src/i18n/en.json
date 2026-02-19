@@ -7,6 +7,9 @@
     "selectAdapterFirst": "Select an adapter first.",
     "wsDisconnectedWarn": "WebSocket is disconnected. You can submit the job, but results may not appear until WS is connected."
   },
+  "errors": {
+    "rateLimit": "Rate limit reached. Try again in ~{seconds}s."
+  },
   "menu": {
     "console": "Console",
     "read": "Read",
@@ -27,6 +30,11 @@
     "save": "Save",
     "clear": "Clear",
     "load": "Load"
+    ,
+    "jobSubmitted": "Job submitted.",
+    "yes": "yes",
+    "no": "no",
+    "cancel": "Cancel"
   },
   "console": {
     "title": "Console",
@@ -35,7 +43,23 @@
     "send": "Send",
     "commands": "Commands (HEX, one per line)",
     "results": "Results",
-    "resultsPlaceholder": "Run results will appear here"
+    "resultsPlaceholder": "Run results will appear here",
+    "emptyCommands": "Enter at least one HEX command.",
+    "targetTag": "Tag",
+    "targetAdapter": "Adapter",
+    "formatHex": "HEX",
+    "formatAscii": "ASCII",
+    "statusSuccess": "success",
+    "statusError": "error: {message}",
+    "statusUnknown": "unknown",
+    "snippets": "Snippets",
+    "snippetsTagTitle": "Tag snippets",
+    "snippetsAdapterTitle": "Adapter snippets",
+    "loadingSnippets": "Loading snippets…",
+    "noSnippets": "No snippets.",
+    "load": "Load",
+    "save": "Save",
+    "loadedCommands": "Commands loaded."
   },
   "read": {
     "title": "Read",
@@ -46,7 +70,11 @@
     "noNdef": "No NDEF data.",
     "readonly": "Read-only",
     "compact": "Compact",
-    "json": "JSON"
+    "json": "JSON",
+    "tagId": "Tag ID",
+    "uid": "UID",
+    "tech": "Tech",
+    "record": "Record"
   },
   "write": {
     "title": "Write",
@@ -58,7 +86,11 @@
     "modalTitle": "NDEF Record",
     "type": "Type",
     "dataJson": "Data (JSON)",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "invalidJson": "Invalid JSON in record data.",
+    "invalidFileArray": "Invalid file: expected JSON array",
+    "loadedRecords": "Loaded records.",
+    "emptyRecords": "Add at least one NDEF record."
   },
   "dump": {
     "title": "Dump",

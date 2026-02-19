@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { NButton, NCard, NFlex, NInput, NSelect, NText, useMessage } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -19,6 +20,7 @@ type DumpRow = {
 };
 
 const message = useMessage();
+const { t } = useI18n();
 const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const runs = useRunsStore();
@@ -36,11 +38,11 @@ const lastRun = computed(() => {
 
 const canDump = computed(() => !!adapters.selectedAdapterId && !sending.value);
 
-const outputOptions = [
-    { label: 'All', value: 'all' },
-    { label: 'Memory', value: 'memory' },
-    { label: 'Memory pages', value: 'memory_pages' },
-];
+const outputOptions = computed(() => [
+    { label: t('dump.all'), value: 'all' },
+    { label: t('dump.memory'), value: 'memory' },
+    { label: t('dump.memoryPages'), value: 'memory_pages' },
+]);
 
 watch(
     () => lastRun.value,
@@ -107,7 +109,7 @@ function clear() {
 
 async function onDump() {
     if (!adapters.selectedAdapterId) {
-        message.error('Select an adapter first.');
+        message.error(t('app.selectAdapterFirst'));
         return;
     }
 
@@ -128,11 +130,11 @@ async function onDump() {
             onWarning: w => message.warning(w),
         });
         if (!res.ok) {
-            message.error(res.error);
+            message.error(res.errorKey ? t(res.errorKey, res.errorParams ?? {}) : res.error);
             return;
         }
         lastJobId.value = res.jobId;
-        message.success('Dump job submitted.');
+        message.success(t('common.jobSubmitted'));
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -142,17 +144,17 @@ async function onDump() {
 </script>
 
 <template>
-    <n-card title="Dump">
+    <n-card :title="t('dump.title')">
         <n-flex vertical style="gap: 12px">
             <n-flex align="center" justify="space-between" :wrap="true">
                 <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-button type="primary" :disabled="!canDump" :loading="sending" @click="onDump">Scan</n-button>
-                    <n-button :disabled="!outputText" @click="saveResults">Save</n-button>
-                    <n-button :disabled="!dump" @click="clear">Clear</n-button>
+                    <n-button type="primary" :disabled="!canDump" :loading="sending" @click="onDump">{{ t('dump.scan') }}</n-button>
+                    <n-button :disabled="!outputText" @click="saveResults">{{ t('common.save') }}</n-button>
+                    <n-button :disabled="!dump" @click="clear">{{ t('common.clear') }}</n-button>
                 </n-flex>
 
                 <n-flex align="center" :wrap="false" style="gap: 8px">
-                    <n-text depth="3">Output:</n-text>
+                    <n-text depth="3">{{ t('dump.output') }}:</n-text>
                     <n-select v-model:value="outputMode" :options="outputOptions" style="width: 180px" />
                 </n-flex>
             </n-flex>
@@ -162,7 +164,7 @@ async function onDump() {
                 readonly
                 :value="outputText"
                 :autosize="{ minRows: 12, maxRows: 24 }"
-                placeholder="Dump output will appear here"
+                :placeholder="t('dump.placeholder')"
             />
         </n-flex>
     </n-card>

@@ -5,6 +5,9 @@ import {
     NCard,
     NFlex,
     NInput,
+    NList,
+    NListItem,
+    NModal,
     NSelect,
     NText,
     useMessage,
@@ -16,6 +19,7 @@ import { useAdaptersStore } from '../stores/adapters';
 import { useLicenseStore } from '../stores/license';
 import { useRunsStore } from '../stores/runs';
 import { useWsStore } from '../stores/ws';
+import { useSnippetsStore } from '../stores/snippets';
 import { type JobDraft } from '../services/capabilities';
 import { base64ToAscii, base64ToHex, hexToBase64 } from '../utils/encoding';
 
@@ -29,6 +33,7 @@ const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const ws = useWsStore();
 const runs = useRunsStore();
+const snippets = useSnippetsStore();
 
 const commandsText = ref('');
 const results = ref<string[]>([]);
@@ -37,9 +42,71 @@ const targetEntity = ref<'tag' | 'adapter'>('tag');
 const sending = ref(false);
 const lastJobId = ref<string>('');
 
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
+const snippetsOpen = ref(false);
+const insertingSnippet = ref(false);
+
+const snippetKind = computed(() => (targetEntity.value === 'tag' ? 'tag' : 'adapter'));
+const snippetList = computed(() => (snippetKind.value === 'tag' ? snippets.tag : snippets.adapter));
+
 const canSend = computed(() => !sending.value && !!adapters.selectedAdapterId);
 
 const output = computed(() => results.value.join('\r\n'));
+
+function download(filename: string, content: string, mime: string) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function onSaveCommands() {
+    download('commands.txt', commandsText.value ?? '', 'text/plain;charset=utf-8');
+}
+
+function onLoadCommandsClick() {
+    fileInputRef.value?.click();
+}
+
+async function onLoadCommandsSelected(ev: Event) {
+    const input = ev.target as HTMLInputElement;
+    try {
+        const file = input.files?.[0];
+        if (!file) return;
+        const text = await file.text();
+        commandsText.value = text;
+        message.success(t('console.loadedCommands'));
+    } catch (e) {
+        message.error(e instanceof Error ? e.message : String(e));
+    } finally {
+        if (input) input.value = '';
+    }
+}
+
+async function openSnippets() {
+    snippetsOpen.value = true;
+    await snippets.ensureLoaded(snippetKind.value);
+}
+
+async function onInsertSnippet(code: string) {
+    if (!code) return;
+    insertingSnippet.value = true;
+    try {
+        const trimmed = code.trim();
+        if (trimmed.length === 0) return;
+
+        const current = commandsText.value ?? '';
+        const next = current.trim().length === 0 ? trimmed : `${current.replace(/\s*$/, '')}\n${trimmed}`;
+        commandsText.value = next;
+        snippetsOpen.value = false;
+    } finally {
+        insertingSnippet.value = false;
+    }
+}
 
 function formatRx(base64: string): string {
     return outputFormat.value === 'ascii' ? base64ToAscii(base64) : base64ToHex(base64);
@@ -85,7 +152,7 @@ async function send() {
     }
 
     if (steps.length === 0) {
-        message.error('Enter at least one HEX command.');
+        message.error(t('console.emptyCommands'));
         return;
     }
 
@@ -107,11 +174,11 @@ async function send() {
             onWarning: w => message.warning(w),
         });
         if (!res.ok) {
-            message.error(res.error);
+            message.error(res.errorKey ? t(res.errorKey, res.errorParams ?? {}) : res.error);
             return;
         }
         lastJobId.value = res.jobId;
-        message.success('Job submitted.');
+        message.success(t('common.jobSubmitted'));
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -127,7 +194,12 @@ function onRunEvent(run: JobRun) {
     const outputLines: string[] = [];
 
     for (const r of run.results) {
-        const statusStr = r.status === CommandStatus.Success ? 'success' : r.status === CommandStatus.Error ? `error: ${r.message}` : 'unknown';
+        const statusStr =
+            r.status === CommandStatus.Success
+                ? t('console.statusSuccess')
+                : r.status === CommandStatus.Error
+                  ? t('console.statusError', { message: r.message ?? '' })
+                  : t('console.statusUnknown');
         const tx = (r.params as any)?.tx_bytes ? base64ToHex((r.params as any).tx_bytes) : '';
         const rx = (r.output as any)?.rx_bytes ? formatRx((r.output as any).rx_bytes) : '';
 
@@ -163,8 +235,8 @@ watch(
                     <n-select
                         v-model:value="targetEntity"
                         :options="[
-                            { label: 'Tag', value: 'tag' },
-                            { label: 'Adapter', value: 'adapter' },
+                            { label: t('console.targetTag'), value: 'tag' },
+                            { label: t('console.targetAdapter'), value: 'adapter' },
                         ]"
                         style="width: 160px"
                     />
@@ -173,14 +245,25 @@ watch(
                     <n-select
                         v-model:value="outputFormat"
                         :options="[
-                            { label: 'HEX', value: 'hex' },
-                            { label: 'ASCII', value: 'ascii' },
+                            { label: t('console.formatHex'), value: 'hex' },
+                            { label: t('console.formatAscii'), value: 'ascii' },
                         ]"
                         style="width: 160px"
                     />
                 </n-flex>
 
                 <n-flex :wrap="false" style="gap: 8px">
+                    <input
+                        ref="fileInputRef"
+                        type="file"
+                        accept="text/*"
+                        style="display: none"
+                        @change="onLoadCommandsSelected"
+                    />
+
+                    <n-button @click="openSnippets">{{ t('console.snippets') }}</n-button>
+                    <n-button @click="onLoadCommandsClick">{{ t('console.load') }}</n-button>
+                    <n-button @click="onSaveCommands">{{ t('console.save') }}</n-button>
                     <n-button type="primary" :disabled="!canSend" :loading="sending" @click="send">{{ t('console.send') }}</n-button>
                     <n-button :disabled="results.length === 0" @click="clearResults">{{ t('common.clear') }}</n-button>
                 </n-flex>
@@ -208,6 +291,32 @@ watch(
                     />
                 </div>
             </n-flex>
+
+            <n-modal
+                v-model:show="snippetsOpen"
+                preset="card"
+                :title="snippetKind === 'tag' ? t('console.snippetsTagTitle') : t('console.snippetsAdapterTitle')"
+                style="width: 720px"
+            >
+                <n-flex vertical style="gap: 12px">
+                    <n-text v-if="snippets.error" type="error">{{ snippets.error }}</n-text>
+                    <n-text v-else-if="snippets.loading" depth="3">{{ t('console.loadingSnippets') }}</n-text>
+                    <n-text v-else-if="snippetList.length === 0" depth="3">{{ t('console.noSnippets') }}</n-text>
+                    <n-list v-else bordered>
+                        <n-list-item v-for="s in snippetList" :key="s.name" @click="onInsertSnippet(s.code)">
+                            <n-flex vertical style="gap: 4px">
+                                <n-text strong>{{ s.name }}</n-text>
+                                <n-text depth="3" v-if="s.description">{{ s.description }}</n-text>
+                                <n-text depth="3" v-else-if="s.usageName">{{ s.usageName }}</n-text>
+                            </n-flex>
+                        </n-list-item>
+                    </n-list>
+
+                    <n-flex justify="end">
+                        <n-button :loading="insertingSnippet" @click="snippetsOpen = false">{{ t('common.cancel') }}</n-button>
+                    </n-flex>
+                </n-flex>
+            </n-modal>
         </n-flex>
     </n-card>
 </template>

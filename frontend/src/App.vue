@@ -27,6 +27,7 @@ import { startWsBridge } from './services/wsBridge';
 import { resetSdk } from './services/sdk';
 import { useRunsStore } from './stores/runs';
 import { useRateLimitStore } from './stores/rateLimit';
+import { useSnippetsStore } from './stores/snippets';
 
 const router = useRouter();
 const route = useRoute();
@@ -39,6 +40,7 @@ const license = useLicenseStore();
 const ws = useWsStore();
 const runs = useRunsStore();
 const rateLimit = useRateLimitStore();
+const snippets = useSnippetsStore();
 
 const { message } = createDiscreteApi(['message']);
 
@@ -76,6 +78,7 @@ function applyBaseUrl() {
   ws.reset();
   runs.clear();
   rateLimit.reset();
+  snippets.reset();
 
   // Refresh metadata and adapter list from the new base URL.
   void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
@@ -89,6 +92,7 @@ function applyLocale() {
   ws.reset();
   runs.clear();
   rateLimit.reset();
+  snippets.reset();
 
   void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
 }
