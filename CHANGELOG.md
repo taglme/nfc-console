@@ -4,6 +4,10 @@
 
 - (empty)
 
+## v1.0.2 - 2026-02-19
+
+- Fix Linux release build dependencies on GitHub Actions (ubuntu-latest)
+
 ## v1.0.1 - 2026-02-19
 
 - Fix GitHub Release workflow (install frontend deps before running tests)
