@@ -8,20 +8,32 @@ import {
   NLayout,
   NLayoutContent,
   NLayoutHeader,
+  NSelect,
   NMenu,
   NMessageProvider,
   NText,
+  createDiscreteApi,
 } from 'naive-ui';
 import { useRoute, useRouter } from 'vue-router';
 
 import { useAppStore } from './stores/app';
+import { useAdaptersStore } from './stores/adapters';
+import { useAboutStore } from './stores/about';
+import { useLicenseStore } from './stores/license';
 import { useSettingsStore } from './stores/settings';
+import { useWsStore } from './stores/ws';
 
 const router = useRouter();
 const route = useRoute();
 
 const app = useAppStore();
 const settings = useSettingsStore();
+const adapters = useAdaptersStore();
+const about = useAboutStore();
+const license = useLicenseStore();
+const ws = useWsStore();
+
+const { message } = createDiscreteApi(['message']);
 
 const baseUrlDraft = ref(settings.baseUrl);
 
@@ -47,10 +59,31 @@ function onMenuSelect(key: string) {
 
 function applyBaseUrl() {
   settings.setBaseUrl(baseUrlDraft.value.trim());
+  message.success('Base URL saved.');
+  // SDK is keyed by settings, so next usage will re-create.
+}
+
+function connectWs() {
+  if (app.embeddedAppKey.trim().length === 0) {
+    message.error('Missing embedded X-App-Key. Build the app with -ldflags -X main.EmbeddedAppKey=...');
+    return;
+  }
+  ws.connect();
+  ws.syncConnected();
+}
+
+function disconnectWs() {
+  ws.disconnect();
 }
 
 onMounted(async () => {
   await app.loadEmbeddedAppKey();
+
+  if (app.embeddedAppKey.trim().length === 0) {
+    message.warning('App key is missing. API calls may be rejected until you rebuild with an embedded key.');
+  }
+
+  await Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
 });
 </script>
 
@@ -77,14 +110,37 @@ onMounted(async () => {
                 style="width: 280px"
               />
               <n-button type="primary" @click="applyBaseUrl">Apply</n-button>
-              <n-text depth="3">
-                App key: {{ appKeyStatus }}
-              </n-text>
+              <n-select
+                :value="adapters.selectedAdapterId"
+                :options="adapters.options"
+                placeholder="Select adapter"
+                clearable
+                style="width: 260px"
+                @update:value="(v) => adapters.select(v || '')"
+              />
+              <n-button v-if="!ws.connected" @click="connectWs">Connect WS</n-button>
+              <n-button v-else @click="disconnectWs">Disconnect</n-button>
+              <n-text depth="3">App key: {{ appKeyStatus }}</n-text>
             </n-flex>
           </n-flex>
         </n-layout-header>
 
         <n-layout-content style="padding: 16px">
+          <n-flex :wrap="true" style="gap: 8px; margin-bottom: 12px">
+            <n-text depth="3">
+              Host: {{ about.info?.hostName || '—' }}
+            </n-text>
+            <n-text depth="3">
+              Version: {{ about.info?.version || '—' }}
+            </n-text>
+            <n-text depth="3">
+              Tier: {{ license.hostTier }}
+            </n-text>
+            <n-text depth="3">
+              WS: {{ ws.connected ? 'connected' : 'disconnected' }}
+            </n-text>
+            <n-text v-if="ws.lastError" depth="3">WS error: {{ ws.lastError }}</n-text>
+          </n-flex>
           <router-view />
         </n-layout-content>
       </n-layout>
