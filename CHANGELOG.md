@@ -4,6 +4,10 @@
 
 - (empty)
 
+## v1.0.3 - 2026-02-19
+
+- Fix Linux release build: alias `webkit2gtk-4.0` pkg-config to `webkit2gtk-4.1` on ubuntu-latest
+
 ## v1.0.2 - 2026-02-19
 
 - Fix Linux release build dependencies on GitHub Actions (ubuntu-latest)

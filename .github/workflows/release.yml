@@ -68,6 +68,26 @@ jobs:
           # AppIndicator is optional on some distros/runners; try both names but don't fail the build here.
           sudo apt-get install -y libayatana-appindicator3-dev || sudo apt-get install -y libappindicator3-dev || echo "AppIndicator dev package not found; continuing"
 
+      - name: Fix pkg-config WebKit name (ubuntu-latest)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if pkg-config --exists webkit2gtk-4.0; then
+            echo "webkit2gtk-4.0 is available"
+            exit 0
+          fi
+
+          if pkg-config --exists webkit2gtk-4.1; then
+            echo "webkit2gtk-4.0 not found, but webkit2gtk-4.1 exists; creating alias .pc file"
+            PC_DIR="/usr/lib/x86_64-linux-gnu/pkgconfig"
+            if [ -f "${PC_DIR}/webkit2gtk-4.1.pc" ] && [ ! -e "${PC_DIR}/webkit2gtk-4.0.pc" ]; then
+              sudo ln -s "${PC_DIR}/webkit2gtk-4.1.pc" "${PC_DIR}/webkit2gtk-4.0.pc"
+            fi
+          fi
+
+          pkg-config --exists webkit2gtk-4.0
+
       - name: Install Wails CLI
         run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.11.0
 
