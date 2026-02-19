@@ -4,6 +4,10 @@
 
 - (empty)
 
+## v1.0.1 - 2026-02-19
+
+- Fix GitHub Release workflow (install frontend deps before running tests)
+
 ## v1.0.0 - 2026-02-19
 
 - Wails + Vue 3/Vite/TypeScript + Naive UI + Pinia app scaffold
