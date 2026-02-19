@@ -14,6 +14,7 @@ import {
     NText,
     useMessage,
 } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -33,6 +34,7 @@ type RecordDraft = {
 };
 
 const message = useMessage();
+const { t } = useI18n();
 const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const runs = useRunsStore();
@@ -261,7 +263,7 @@ watch(
 
 async function onWrite() {
     if (!adapters.selectedAdapterId) {
-        message.error('Select an adapter first.');
+        message.error(t('app.selectAdapterFirst'));
         return;
     }
     if (records.value.length === 0) {
@@ -325,20 +327,20 @@ async function onWrite() {
 </script>
 
 <template>
-    <n-card title="Write">
+    <n-card :title="t('write.title')">
         <n-flex vertical style="gap: 12px">
             <n-flex align="center" justify="space-between" :wrap="true">
                 <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-button type="primary" :disabled="!canWrite" :loading="sending" @click="onWrite">Write</n-button>
-                    <n-checkbox v-model:checked="permanentLock">Permanent lock tag</n-checkbox>
+                    <n-button type="primary" :disabled="!canWrite" :loading="sending" @click="onWrite">{{ t('write.write') }}</n-button>
+                    <n-checkbox v-model:checked="permanentLock">{{ t('write.permanentLock') }}</n-checkbox>
                 </n-flex>
 
                 <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-button @click="openAdd">Add record</n-button>
-                    <n-button :disabled="records.length === 0" @click="saveToFile">Save</n-button>
+                    <n-button @click="openAdd">{{ t('write.addRecord') }}</n-button>
+                    <n-button :disabled="records.length === 0" @click="saveToFile">{{ t('common.save') }}</n-button>
                     <label>
                         <input type="file" accept=".nfc,application/json" style="display:none" @change="loadFromFile" />
-                        <n-button>Load</n-button>
+                        <n-button>{{ t('common.load') }}</n-button>
                     </label>
                 </n-flex>
             </n-flex>
@@ -346,7 +348,7 @@ async function onWrite() {
             <n-divider />
 
             <div v-if="records.length === 0">
-                <n-text depth="3">No records. Click “Add record”.</n-text>
+                <n-text depth="3">{{ t('write.noRecords') }}</n-text>
             </div>
 
             <div v-else>
@@ -373,18 +375,18 @@ async function onWrite() {
             <n-divider />
 
             <div>
-                <n-text depth="3">Last write run</n-text>
+                <n-text depth="3">{{ t('write.lastRun') }}</n-text>
                 <n-input type="textarea" readonly :value="resultsText" :autosize="{ minRows: 6, maxRows: 12 }" />
             </div>
         </n-flex>
 
-        <n-modal v-model:show="modalOpen" preset="card" title="NDEF Record" style="width: 720px">
+        <n-modal v-model:show="modalOpen" preset="card" :title="t('write.modalTitle')" style="width: 720px">
             <n-form label-placement="top">
-                <n-form-item label="Type">
+                <n-form-item :label="t('write.type')">
                     <n-select v-model:value="draftType" :options="typeOptions" />
                 </n-form-item>
 
-                <n-form-item label="Data (JSON)">
+                <n-form-item :label="t('write.dataJson')">
                     <n-input
                         v-model:value="draftDataText"
                         type="textarea"
@@ -394,7 +396,7 @@ async function onWrite() {
                 </n-form-item>
 
                 <n-flex justify="end" :wrap="false" style="gap: 8px">
-                    <n-button @click="modalOpen = false">Cancel</n-button>
+                    <n-button @click="modalOpen = false">{{ t('write.cancel') }}</n-button>
                     <n-button type="primary" @click="saveDraft">Save</n-button>
                 </n-flex>
             </n-form>

@@ -9,6 +9,7 @@ import {
     NText,
     useMessage,
 } from 'naive-ui';
+import { useI18n } from 'vue-i18n';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -23,6 +24,7 @@ import type { JobStepResource } from 'nfc-jsclient/dist/models/jobs';
 import type { JobRun } from 'nfc-jsclient/dist/client/runs';
 
 const message = useMessage();
+const { t } = useI18n();
 const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const ws = useWsStore();
@@ -67,11 +69,11 @@ function buildStepsFromText(text: string): JobStepResource[] {
 
 async function send() {
     if (!adapters.selectedAdapterId) {
-        message.error('Select an adapter first.');
+        message.error(t('app.selectAdapterFirst'));
         return;
     }
     if (!ws.connected) {
-        message.warning('WebSocket is disconnected. You can submit the job, but results may not appear until WS is connected.');
+        message.warning(t('app.wsDisconnectedWarn'));
     }
 
     let steps: JobStepResource[];
@@ -153,11 +155,11 @@ watch(
 </script>
 
 <template>
-    <n-card title="Console">
+    <n-card :title="t('console.title')">
         <n-flex vertical style="gap: 12px">
             <n-flex align="center" justify="space-between" :wrap="true">
                 <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-text depth="3">Target:</n-text>
+                    <n-text depth="3">{{ t('console.target') }}:</n-text>
                     <n-select
                         v-model:value="targetEntity"
                         :options="[
@@ -167,7 +169,7 @@ watch(
                         style="width: 160px"
                     />
 
-                    <n-text depth="3">Output:</n-text>
+                    <n-text depth="3">{{ t('console.output') }}:</n-text>
                     <n-select
                         v-model:value="outputFormat"
                         :options="[
@@ -179,14 +181,14 @@ watch(
                 </n-flex>
 
                 <n-flex :wrap="false" style="gap: 8px">
-                    <n-button type="primary" :disabled="!canSend" :loading="sending" @click="send">Send</n-button>
-                    <n-button :disabled="results.length === 0" @click="clearResults">Clear</n-button>
+                    <n-button type="primary" :disabled="!canSend" :loading="sending" @click="send">{{ t('console.send') }}</n-button>
+                    <n-button :disabled="results.length === 0" @click="clearResults">{{ t('common.clear') }}</n-button>
                 </n-flex>
             </n-flex>
 
             <n-flex :wrap="true" style="gap: 12px">
                 <div style="flex: 1; min-width: 320px">
-                    <n-text depth="3">Commands (HEX, one per line)</n-text>
+                    <n-text depth="3">{{ t('console.commands') }}</n-text>
                     <n-input
                         v-model:value="commandsText"
                         type="textarea"
@@ -196,13 +198,13 @@ watch(
                 </div>
 
                 <div style="flex: 1; min-width: 320px">
-                    <n-text depth="3">Results</n-text>
+                    <n-text depth="3">{{ t('console.results') }}</n-text>
                     <n-input
                         :value="output"
                         type="textarea"
                         readonly
                         :autosize="{ minRows: 10, maxRows: 20 }"
-                        placeholder="Run results will appear here"
+                        :placeholder="t('console.resultsPlaceholder')"
                     />
                 </div>
             </n-flex>

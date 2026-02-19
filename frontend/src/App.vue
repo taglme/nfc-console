@@ -15,6 +15,7 @@ import {
   createDiscreteApi,
 } from 'naive-ui';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 import { useAppStore } from './stores/app';
 import { useAdaptersStore } from './stores/adapters';
@@ -41,15 +42,18 @@ const rateLimit = useRateLimitStore();
 
 const { message } = createDiscreteApi(['message']);
 
-const baseUrlDraft = ref(settings.baseUrl);
+const { t, locale } = useI18n();
 
-const menuOptions = [
-  { label: 'Console', key: '/' },
-  { label: 'Read', key: '/read' },
-  { label: 'Write', key: '/write' },
-  { label: 'Dump', key: '/dump' },
-  { label: 'Other', key: '/other' },
-];
+const baseUrlDraft = ref(settings.baseUrl);
+const localeDraft = ref<'en' | 'ru'>(settings.locale);
+
+const menuOptions = computed(() => [
+  { label: t('menu.console'), key: '/' },
+  { label: t('menu.read'), key: '/read' },
+  { label: t('menu.write'), key: '/write' },
+  { label: t('menu.dump'), key: '/dump' },
+  { label: t('menu.other'), key: '/other' },
+]);
 
 const activeMenuKey = computed(() => route.path);
 
@@ -65,7 +69,7 @@ function onMenuSelect(key: string) {
 
 function applyBaseUrl() {
   settings.setBaseUrl(baseUrlDraft.value.trim());
-  message.success('Base URL saved.');
+  message.success(t('app.baseUrlSaved'));
 
   // Reset cached instances/state so next requests use the new server.
   resetSdk();
@@ -77,9 +81,21 @@ function applyBaseUrl() {
   void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
 }
 
+function applyLocale() {
+  settings.setLocale(localeDraft.value);
+  locale.value = localeDraft.value;
+
+  resetSdk();
+  ws.reset();
+  runs.clear();
+  rateLimit.reset();
+
+  void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
+}
+
 function connectWs() {
   if (app.embeddedAppKey.trim().length === 0) {
-    message.error('Missing embedded X-App-Key. Build the app with -ldflags -X main.EmbeddedAppKey=...');
+    message.error(t('app.missingAppKey'));
     return;
   }
   ws.connect();
@@ -93,8 +109,10 @@ onMounted(async () => {
   startWsBridge();
   await app.loadEmbeddedAppKey();
 
+  locale.value = settings.locale;
+
   if (app.embeddedAppKey.trim().length === 0) {
-    message.warning('App key is missing. API calls may be rejected until you rebuild with an embedded key.');
+    message.warning(t('app.appKeyMissingWarn'));
   }
 
   await Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
@@ -108,7 +126,7 @@ onMounted(async () => {
         <n-layout-header bordered style="padding: 12px 16px">
           <n-flex align="center" justify="space-between" :wrap="false">
             <n-flex align="center" :wrap="false" style="gap: 16px">
-              <n-text strong>Taglme NFC Console</n-text>
+              <n-text strong>{{ t('app.title') }}</n-text>
               <n-menu
                 mode="horizontal"
                 :options="menuOptions"
@@ -123,7 +141,18 @@ onMounted(async () => {
                 placeholder="http://127.0.0.1:3011"
                 style="width: 280px"
               />
-              <n-button type="primary" @click="applyBaseUrl">Apply</n-button>
+              <n-button type="primary" @click="applyBaseUrl">{{ t('common.apply') }}</n-button>
+
+              <n-select
+                v-model:value="localeDraft"
+                :options="[
+                  { label: 'EN', value: 'en' },
+                  { label: 'RU', value: 'ru' }
+                ]"
+                style="width: 90px"
+              />
+              <n-button @click="applyLocale">{{ localeDraft.toUpperCase() }}</n-button>
+
               <n-select
                 :value="adapters.selectedAdapterId"
                 :options="adapters.options"
@@ -132,8 +161,8 @@ onMounted(async () => {
                 style="width: 260px"
                 @update:value="(v) => adapters.select(v || '')"
               />
-              <n-button v-if="!ws.connected" @click="connectWs">Connect WS</n-button>
-              <n-button v-else @click="disconnectWs">Disconnect</n-button>
+              <n-button v-if="!ws.connected" @click="connectWs">{{ t('common.connectWs') }}</n-button>
+              <n-button v-else @click="disconnectWs">{{ t('common.disconnect') }}</n-button>
               <n-text depth="3">App key: {{ appKeyStatus }}</n-text>
             </n-flex>
           </n-flex>
@@ -142,16 +171,16 @@ onMounted(async () => {
         <n-layout-content style="padding: 16px">
           <n-flex :wrap="true" style="gap: 8px; margin-bottom: 12px">
             <n-text depth="3">
-              Host: {{ about.info?.hostName || '—' }}
+              {{ t('common.host') }}: {{ about.info?.hostName || '—' }}
             </n-text>
             <n-text depth="3">
-              Version: {{ about.info?.version || '—' }}
+              {{ t('common.version') }}: {{ about.info?.version || '—' }}
             </n-text>
             <n-text depth="3">
-              Tier: {{ license.hostTier }}
+              {{ t('common.tier') }}: {{ license.hostTier }}
             </n-text>
             <n-text depth="3">
-              WS: {{ ws.connected ? 'connected' : 'disconnected' }}
+              {{ t('common.ws') }}: {{ ws.connected ? t('common.connected') : t('common.disconnected') }}
             </n-text>
             <n-text v-if="ws.lastError" depth="3">WS error: {{ ws.lastError }}</n-text>
           </n-flex>

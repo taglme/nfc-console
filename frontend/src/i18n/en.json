@@ -1,0 +1,82 @@
+{
+  "app": {
+    "title": "Taglme NFC Console",
+    "baseUrlSaved": "Base URL saved.",
+    "missingAppKey": "Missing embedded X-App-Key. Build the app with -ldflags -X main.EmbeddedAppKey=...",
+    "appKeyMissingWarn": "App key is missing. API calls may be rejected until you rebuild with an embedded key.",
+    "selectAdapterFirst": "Select an adapter first.",
+    "wsDisconnectedWarn": "WebSocket is disconnected. You can submit the job, but results may not appear until WS is connected."
+  },
+  "menu": {
+    "console": "Console",
+    "read": "Read",
+    "write": "Write",
+    "dump": "Dump",
+    "other": "Other"
+  },
+  "common": {
+    "apply": "Apply",
+    "connectWs": "Connect WS",
+    "disconnect": "Disconnect",
+    "host": "Host",
+    "version": "Version",
+    "tier": "Tier",
+    "ws": "WS",
+    "connected": "connected",
+    "disconnected": "disconnected",
+    "save": "Save",
+    "clear": "Clear",
+    "load": "Load"
+  },
+  "console": {
+    "title": "Console",
+    "target": "Target",
+    "output": "Output",
+    "send": "Send",
+    "commands": "Commands (HEX, one per line)",
+    "results": "Results",
+    "resultsPlaceholder": "Run results will appear here"
+  },
+  "read": {
+    "title": "Read",
+    "read": "Read",
+    "recordsView": "Records view",
+    "tags": "Tags",
+    "ndef": "NDEF",
+    "noNdef": "No NDEF data.",
+    "readonly": "Read-only",
+    "compact": "Compact",
+    "json": "JSON"
+  },
+  "write": {
+    "title": "Write",
+    "write": "Write",
+    "permanentLock": "Permanent lock tag",
+    "addRecord": "Add record",
+    "noRecords": "No records. Click “Add record”.",
+    "lastRun": "Last write run",
+    "modalTitle": "NDEF Record",
+    "type": "Type",
+    "dataJson": "Data (JSON)",
+    "cancel": "Cancel"
+  },
+  "dump": {
+    "title": "Dump",
+    "scan": "Scan",
+    "output": "Output",
+    "placeholder": "Dump output will appear here",
+    "all": "All",
+    "memory": "Memory",
+    "memoryPages": "Memory pages"
+  },
+  "other": {
+    "title": "Other",
+    "lockTitle": "Lock tag",
+    "lockDesc": "Permanently lock the tag (irreversible).",
+    "lock": "Lock",
+    "formatTitle": "Format tag",
+    "formatDesc": "Format tag to default state.",
+    "format": "Format",
+    "lastRun": "Last run"
+  }
+}

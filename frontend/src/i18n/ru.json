@@ -1,0 +1,82 @@
+{
+  "app": {
+    "title": "Taglme NFC Console",
+    "baseUrlSaved": "Base URL сохранён.",
+    "missingAppKey": "Отсутствует встроенный X-App-Key. Соберите приложение с -ldflags -X main.EmbeddedAppKey=...",
+    "appKeyMissingWarn": "Ключ приложения отсутствует. API может отклонять запросы, пока вы не пересоберёте приложение со встроенным ключом.",
+    "selectAdapterFirst": "Сначала выберите адаптер.",
+    "wsDisconnectedWarn": "WebSocket отключён. Job можно отправить, но результаты могут не появиться, пока WS не подключён."
+  },
+  "menu": {
+    "console": "Console",
+    "read": "Read",
+    "write": "Write",
+    "dump": "Dump",
+    "other": "Other"
+  },
+  "common": {
+    "apply": "Применить",
+    "connectWs": "Подключить WS",
+    "disconnect": "Отключить",
+    "host": "Хост",
+    "version": "Версия",
+    "tier": "Тир",
+    "ws": "WS",
+    "connected": "подключён",
+    "disconnected": "отключён",
+    "save": "Сохранить",
+    "clear": "Очистить",
+    "load": "Загрузить"
+  },
+  "console": {
+    "title": "Console",
+    "target": "Цель",
+    "output": "Формат",
+    "send": "Отправить",
+    "commands": "Команды (HEX, по одной в строке)",
+    "results": "Результаты",
+    "resultsPlaceholder": "Результаты выполнения появятся здесь"
+  },
+  "read": {
+    "title": "Read",
+    "read": "Прочитать",
+    "recordsView": "Вид записей",
+    "tags": "Теги",
+    "ndef": "NDEF",
+    "noNdef": "Нет NDEF данных.",
+    "readonly": "Только чтение",
+    "compact": "Коротко",
+    "json": "JSON"
+  },
+  "write": {
+    "title": "Write",
+    "write": "Записать",
+    "permanentLock": "Перманентная блокировка тега",
+    "addRecord": "Добавить запись",
+    "noRecords": "Нет записей. Нажмите “Добавить запись”.",
+    "lastRun": "Последний запуск",
+    "modalTitle": "NDEF запись",
+    "type": "Тип",
+    "dataJson": "Данные (JSON)",
+    "cancel": "Отмена"
+  },
+  "dump": {
+    "title": "Dump",
+    "scan": "Сканировать",
+    "output": "Вывод",
+    "placeholder": "Дамп появится здесь",
+    "all": "Все",
+    "memory": "Память",
+    "memoryPages": "Страницы памяти"
+  },
+  "other": {
+    "title": "Other",
+    "lockTitle": "Блокировка",
+    "lockDesc": "Перманентно заблокировать тег (необратимо).",
+    "lock": "Заблокировать",
+    "formatTitle": "Форматирование",
+    "formatDesc": "Сбросить тег в состояние по умолчанию.",
+    "format": "Форматировать",
+    "lastRun": "Последний запуск"
+  }
+}

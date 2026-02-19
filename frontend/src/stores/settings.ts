@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 const LS_KEY = 'taglme.console.settings.v1';
 
-type SettingsState = {
+export type SettingsState = {
     baseUrl: string;
     locale: 'en' | 'ru';
 };
