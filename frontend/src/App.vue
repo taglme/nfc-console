@@ -23,6 +23,9 @@ import { useLicenseStore } from './stores/license';
 import { useSettingsStore } from './stores/settings';
 import { useWsStore } from './stores/ws';
 import { startWsBridge } from './services/wsBridge';
+import { resetSdk } from './services/sdk';
+import { useRunsStore } from './stores/runs';
+import { useRateLimitStore } from './stores/rateLimit';
 
 const router = useRouter();
 const route = useRoute();
@@ -33,6 +36,8 @@ const adapters = useAdaptersStore();
 const about = useAboutStore();
 const license = useLicenseStore();
 const ws = useWsStore();
+const runs = useRunsStore();
+const rateLimit = useRateLimitStore();
 
 const { message } = createDiscreteApi(['message']);
 
@@ -61,7 +66,15 @@ function onMenuSelect(key: string) {
 function applyBaseUrl() {
   settings.setBaseUrl(baseUrlDraft.value.trim());
   message.success('Base URL saved.');
-  // SDK is keyed by settings, so next usage will re-create.
+
+  // Reset cached instances/state so next requests use the new server.
+  resetSdk();
+  ws.reset();
+  runs.clear();
+  rateLimit.reset();
+
+  // Refresh metadata and adapter list from the new base URL.
+  void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
 }
 
 function connectWs() {
@@ -70,7 +83,6 @@ function connectWs() {
     return;
   }
   ws.connect();
-  ws.syncConnected();
 }
 
 function disconnectWs() {

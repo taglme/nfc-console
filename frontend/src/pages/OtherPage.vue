@@ -2,13 +2,12 @@
 import { computed, ref, watch } from 'vue';
 import { NButton, NCard, NFlex, NInput, NText, useMessage } from 'naive-ui';
 
-import { getSdk } from '../services/sdk';
+import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
 import { useLicenseStore } from '../stores/license';
 import { useRunsStore } from '../stores/runs';
-import { enforceJobDraft, type JobDraft } from '../services/capabilities';
+import { type JobDraft } from '../services/capabilities';
 
-import type { NewJob } from 'nfc-jsclient/dist/models/jobs';
 import { CommandStatus } from 'nfc-jsclient/dist/models/commands';
 
 const message = useMessage();
@@ -43,29 +42,13 @@ watch(
     { deep: false },
 );
 
-async function submitJob(jobName: string, steps: Array<{ command: string; params: any }>, kind: 'lock' | 'format') {
+async function submitActionJob(jobName: string, steps: Array<{ command: string; params: any }>, kind: 'lock' | 'format') {
     if (!adapters.selectedAdapterId) {
         message.error('Select an adapter first.');
         return;
     }
 
-    const draft: JobDraft = {
-        repeat: 0,
-        steps,
-    };
-    const enforced = enforceJobDraft(license.access, draft);
-    if (!enforced.ok) {
-        message.error(enforced.error);
-        return;
-    }
-    enforced.warnings.forEach(w => message.warning(w));
-
-    const job: NewJob = {
-        job_name: jobName,
-        repeat: enforced.job.repeat,
-        expire_after: 60,
-        steps: enforced.job.steps as any,
-    };
+    const draft: JobDraft = { repeat: 0, steps };
 
     if (kind === 'lock') sendingLock.value = true;
     if (kind === 'format') sendingFormat.value = true;
@@ -73,10 +56,18 @@ async function submitJob(jobName: string, steps: Array<{ command: string; params
     resultsText.value = '';
 
     try {
-        const sdk = getSdk();
-        await sdk.Jobs.deleteAll(adapters.selectedAdapterId);
-        const created = await sdk.Jobs.add(adapters.selectedAdapterId, job);
-        lastJobId.value = created.jobID;
+        const res = await submitJob({
+            adapterId: adapters.selectedAdapterId,
+            jobName,
+            draft,
+            access: license.access,
+            onWarning: (w: string) => message.warning(w),
+        });
+        if (!res.ok) {
+            message.error(res.error);
+            return;
+        }
+        lastJobId.value = res.jobId;
         message.success('Job submitted.');
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
@@ -87,11 +78,11 @@ async function submitJob(jobName: string, steps: Array<{ command: string; params
 }
 
 async function onLock() {
-    await submitJob('lock', [{ command: 'lock_permanent', params: {} }], 'lock');
+    await submitActionJob('lock', [{ command: 'lock_permanent', params: {} }], 'lock');
 }
 
 async function onFormat() {
-    await submitJob('format', [{ command: 'format_default', params: {} }], 'format');
+    await submitActionJob('format', [{ command: 'format_default', params: {} }], 'format');
 }
 </script>
 

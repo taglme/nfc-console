@@ -12,6 +12,13 @@ export const useRunsStore = defineStore('runs', {
     }),
 
     actions: {
+        clear() {
+            this.lastRunByAdapterId = {};
+            this.lastRunByJobId = {};
+            this.lastRunEventNameByJobId = {};
+            this.parseError = '';
+        },
+
         ingestWsEvent(event: Event) {
             if (event.name !== EventName.RunSuccess && event.name !== EventName.RunError) return;
             if (!event.data) return;

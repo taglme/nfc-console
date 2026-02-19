@@ -2,13 +2,12 @@
 import { computed, ref, watch } from 'vue';
 import { NButton, NCard, NFlex, NInput, NSelect, NText, useMessage } from 'naive-ui';
 
-import { getSdk } from '../services/sdk';
+import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
 import { useLicenseStore } from '../stores/license';
 import { useRunsStore } from '../stores/runs';
-import { enforceJobDraft, type JobDraft } from '../services/capabilities';
+import { type JobDraft } from '../services/capabilities';
 
-import type { NewJob } from 'nfc-jsclient/dist/models/jobs';
 import { Command } from 'nfc-jsclient/dist/models/commands';
 
 type OutputMode = 'all' | 'memory' | 'memory_pages';
@@ -117,28 +116,22 @@ async function onDump() {
         steps: [{ command: 'get_dump', params: {} }],
     };
 
-    const enforced = enforceJobDraft(license.access, draft);
-    if (!enforced.ok) {
-        message.error(enforced.error);
-        return;
-    }
-    enforced.warnings.forEach(w => message.warning(w));
-
-    const job: NewJob = {
-        job_name: 'dump',
-        repeat: enforced.job.repeat,
-        expire_after: 60,
-        steps: enforced.job.steps as any,
-    };
-
     sending.value = true;
     lastJobId.value = '';
     dump.value = null;
     try {
-        const sdk = getSdk();
-        await sdk.Jobs.deleteAll(adapters.selectedAdapterId);
-        const created = await sdk.Jobs.add(adapters.selectedAdapterId, job);
-        lastJobId.value = created.jobID;
+        const res = await submitJob({
+            adapterId: adapters.selectedAdapterId,
+            jobName: 'dump',
+            draft,
+            access: license.access,
+            onWarning: w => message.warning(w),
+        });
+        if (!res.ok) {
+            message.error(res.error);
+            return;
+        }
+        lastJobId.value = res.jobId;
         message.success('Dump job submitted.');
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
