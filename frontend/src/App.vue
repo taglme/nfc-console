@@ -22,6 +22,7 @@ import { useAboutStore } from './stores/about';
 import { useLicenseStore } from './stores/license';
 import { useSettingsStore } from './stores/settings';
 import { useWsStore } from './stores/ws';
+import { startWsBridge } from './services/wsBridge';
 
 const router = useRouter();
 const route = useRoute();
@@ -77,6 +78,7 @@ function disconnectWs() {
 }
 
 onMounted(async () => {
+  startWsBridge();
   await app.loadEmbeddedAppKey();
 
   if (app.embeddedAppKey.trim().length === 0) {

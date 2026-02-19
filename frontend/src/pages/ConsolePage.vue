@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import {
     NButton,
     NCard,
@@ -13,19 +13,20 @@ import {
 import { getSdk } from '../services/sdk';
 import { useAdaptersStore } from '../stores/adapters';
 import { useLicenseStore } from '../stores/license';
+import { useRunsStore } from '../stores/runs';
 import { useWsStore } from '../stores/ws';
 import { enforceJobDraft, type JobDraft } from '../services/capabilities';
 import { base64ToAscii, base64ToHex, hexToBase64 } from '../utils/encoding';
 
-import { EventName } from 'nfc-jsclient/dist/models/events';
 import { CommandStatus } from 'nfc-jsclient/dist/models/commands';
 import type { JobStepResource, NewJob } from 'nfc-jsclient/dist/models/jobs';
-import { JobRun } from 'nfc-jsclient/dist/client/runs';
+import type { JobRun } from 'nfc-jsclient/dist/client/runs';
 
 const message = useMessage();
 const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const ws = useWsStore();
+const runs = useRunsStore();
 
 const commandsText = ref('');
 const results = ref<string[]>([]);
@@ -143,34 +144,18 @@ function onRunEvent(run: JobRun) {
     results.value = outputLines;
 }
 
-function handleWsEvent() {
-    const event = ws.lastEvent;
-    if (!event) return;
-    if (event.name !== EventName.RunSuccess && event.name !== EventName.RunError) return;
-    if (event.adapterID !== adapters.selectedAdapterId) return;
-    if (!event.data) return;
-
-    try {
-        const run = new JobRun(event.data);
+watch(
+    () => {
+        if (!adapters.selectedAdapterId) return null;
+        return runs.lastRunByAdapterId[adapters.selectedAdapterId] ?? null;
+    },
+    run => {
+        if (!run) return;
         if (lastJobId.value && run.jobID !== lastJobId.value) return;
         onRunEvent(run);
-    } catch (e) {
-        // keep UI resilient even if event payload changes
-        message.error(`Failed to parse run event: ${e instanceof Error ? e.message : String(e)}`);
-    }
-}
-
-let unwatch: (() => void) | null = null;
-onMounted(() => {
-    unwatch = watch(
-        () => ws.lastEvent,
-        () => handleWsEvent(),
-        { deep: false },
-    );
-});
-onBeforeUnmount(() => {
-    if (unwatch) unwatch();
-});
+    },
+    { deep: false },
+);
 </script>
 
 <template>
