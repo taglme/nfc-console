@@ -5,21 +5,26 @@ import {
   NConfigProvider,
   NFlex,
   NInput,
+  NInputNumber,
+  NIcon,
   NLayout,
   NLayoutContent,
   NLayoutHeader,
   NLayoutFooter,
+  NModal,
   NSelect,
   NMenu,
   NMessageProvider,
-  NPopover,
   NText,
   createDiscreteApi,
   darkTheme,
   NTag,
+  useThemeVars,
 } from 'naive-ui';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+
+import { RefreshOutline, SaveOutline, WifiOutline } from '@vicons/ionicons5';
 
 import { useAppStore } from './stores/app';
 import { useAdaptersStore } from './stores/adapters';
@@ -50,8 +55,16 @@ const { message } = createDiscreteApi(['message']);
 
 const { t, locale } = useI18n();
 
-const baseUrlDraft = ref(settings.baseUrl);
-const localeDraft = ref<'en' | 'ru'>(settings.locale);
+const themeVars = useThemeVars();
+
+const showConnectionModal = ref(false);
+const hostDraft = ref('127.0.0.1');
+const portDraft = ref<number>(3011);
+
+const localeOptions = [
+  { label: 'EN', value: 'en' },
+  { label: 'RU', value: 'ru' },
+] as const;
 
 const menuOptions = computed(() => [
   { label: t('menu.console'), key: '/' },
@@ -65,6 +78,11 @@ const activeMenuKey = computed(() => route.path);
 
 const theme = computed(() => (settings.theme === 'dark' ? darkTheme : null));
 
+const headerStyle = computed(() => ({
+  backgroundColor: themeVars.value.primaryColor,
+  color: themeVars.value.baseColor,
+}));
+
 const appKeyStatus = computed(() => {
   if (!app.embeddedAppKeyLoaded) return 'loading';
   if (app.embeddedAppKey.trim().length === 0) return 'missing';
@@ -75,25 +93,10 @@ function onMenuSelect(key: string) {
   router.push(key);
 }
 
-function applyBaseUrl() {
-  settings.setBaseUrl(baseUrlDraft.value.trim());
+function applyBaseUrl(baseUrl: string) {
+  settings.setBaseUrl(baseUrl.trim());
   message.success(t('app.baseUrlSaved'));
 
-  // Reset cached instances/state so next requests use the new server.
-  resetSdk();
-  ws.reset();
-  runs.clear();
-  rateLimit.reset();
-  snippets.reset();
-
-  // Refresh metadata and adapter list from the new base URL.
-  void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
-}
-
-function applyLocale() {
-  settings.setLocale(localeDraft.value);
-  locale.value = localeDraft.value;
-
   resetSdk();
   ws.reset();
   runs.clear();
@@ -103,7 +106,46 @@ function applyLocale() {
   void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
 }
 
-function connectWs() {
+function parseBaseUrlToHostPort(baseUrl: string): { host: string; port: number } {
+  try {
+    const u = new URL(baseUrl);
+    const host = u.hostname || '127.0.0.1';
+    const port = u.port ? Number(u.port) : u.protocol === 'https:' ? 443 : 80;
+    return { host, port: Number.isFinite(port) && port > 0 ? port : 3011 };
+  } catch {
+    return { host: '127.0.0.1', port: 3011 };
+  }
+}
+
+function buildBaseUrlFromHostPort(host: string, port: number): string {
+  const safeHost = host.trim();
+  const safePort = Math.trunc(port);
+  return `http://${safeHost}:${safePort}`;
+}
+
+function openConnectionSettings() {
+  const { host, port } = parseBaseUrlToHostPort(settings.baseUrl);
+  hostDraft.value = host;
+  portDraft.value = port;
+  showConnectionModal.value = true;
+}
+
+function saveConnectionSettings() {
+  const host = hostDraft.value.trim();
+  const port = Math.trunc(portDraft.value);
+
+  if (!host) {
+    message.error(t('common.enterHost'));
+    return;
+  }
+  if (!Number.isFinite(port) || port < 1 || port > 65535) {
+    message.error(t('common.enterPort'));
+    return;
+  }
+
+  applyBaseUrl(buildBaseUrlFromHostPort(host, port));
+  showConnectionModal.value = false;
+
   if (app.embeddedAppKey.trim().length === 0) {
     message.error(t('app.missingAppKey'));
     return;
@@ -111,14 +153,33 @@ function connectWs() {
   ws.connect();
 }
 
-function disconnectWs() {
-  ws.disconnect();
+function setLocale(next: 'en' | 'ru') {
+  settings.setLocale(next);
+  locale.value = next;
+
+  resetSdk();
+  ws.reset();
+  runs.clear();
+  rateLimit.reset();
+  snippets.reset();
+
+  void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
+  if (app.embeddedAppKey.trim().length !== 0) {
+    ws.connect();
+  }
 }
 
-function toggleTheme() {
-  const next = settings.theme === 'light' ? 'dark' : 'light';
-  settings.setTheme(next);
-}
+const wsIndicatorType = computed(() => {
+  if (ws.connected) return 'success';
+  if (ws.connecting) return 'warning';
+  return 'error';
+});
+
+const wsIndicatorText = computed(() => {
+  if (ws.connected) return t('common.connected');
+  if (ws.connecting) return t('common.connecting');
+  return t('common.disconnected');
+});
 
 onMounted(async () => {
   startWsBridge();
@@ -131,6 +192,11 @@ onMounted(async () => {
   }
 
   await Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
+
+  // Try WS connection on startup using current settings.
+  if (app.embeddedAppKey.trim().length !== 0) {
+    ws.connect();
+  }
 });
 </script>
 
@@ -140,7 +206,7 @@ onMounted(async () => {
       <n-layout style="height: 100vh; display: flex; flex-direction: column;" position="absolute">
         
         <!-- Level 1: System Header -->
-        <n-layout-header bordered style="padding: 0 16px; height: 56px; z-index: 20;">
+        <n-layout-header :style="{ ...headerStyle, padding: '0 16px', height: '56px', zIndex: 20 }">
           <n-flex align="center" justify="space-between" :wrap="false" style="height: 100%;">
             <!-- Brand -->
             <n-flex align="center" :wrap="false" style="gap: 12px">
@@ -149,97 +215,75 @@ onMounted(async () => {
                   font-weight: 800;
                   font-size: 18px;
                   line-height: 1;
-                  padding-right: 12px;
-                  border-right: 1px solid var(--n-border-color);
                 "
               >
-                TAGLME <n-text type="primary">CONSOLE</n-text>
+                TAGLME <span style="opacity: 0.9">CONSOLE</span>
               </div>
 
-               <!-- Status Badges (Compact) -->
-               <n-flex size="small" align="center">
-                <n-tag size="small" :bordered="false" type="default" round>
-                  {{ about.info?.hostName || 'Local' }}
-                </n-tag>
-                 <n-tag v-if="ws.connected" size="small" :bordered="false" type="success" round>
-                  Connected
-                </n-tag>
-                <n-tag v-else size="small" :bordered="false" type="error" round>
-                  Disconnected
-                </n-tag>
-               </n-flex>
+              <n-tag size="small" :bordered="false" type="default" round>
+                {{ about.info?.hostName || 'Local' }}
+              </n-tag>
             </n-flex>
 
             <!-- Actions -->
             <n-flex align="center" :wrap="false" style="gap: 12px;">
               <n-select
                 size="small"
-                :value="adapters.selectedAdapterId"
-                :options="adapters.options"
-                placeholder="Select adapter"
-                clearable
-                style="width: 240px"
-                @update:value="(v) => adapters.select(v || '')"
+                :value="settings.locale"
+                :options="(localeOptions as any)"
+                style="width: 84px"
+                @update:value="(v) => setLocale((v || 'en') as any)"
               />
-              
-              <n-button v-if="!ws.connected" size="small" type="primary" @click="connectWs">{{ t('common.connectWs') }}</n-button>
-              <n-button v-else size="small" type="error" ghost @click="disconnectWs">{{ t('common.disconnect') }}</n-button>
 
-              <div style="width: 1px; height: 20px; background-color: var(--n-border-color); margin: 0 4px;"></div>
-
-              <n-button size="small" quaternary @click="toggleTheme">
-                {{ settings.theme === 'light' ? '🌙' : '☀️' }}
-              </n-button>
-              
-               <n-popover trigger="click" placement="bottom-end">
-                <template #trigger>
-                  <n-button size="small" strong secondary>
-                    {{ t('common.settings') || 'Settings' }}
-                  </n-button>
-                </template>
-                <n-flex vertical style="padding: 8px; min-width: 300px; gap: 12px">
-                  <n-text strong depth="1">Connection</n-text>
-                  <n-flex align="center" :wrap="false">
-                    <n-input
-                      v-model:value="baseUrlDraft"
-                      placeholder="http://127.0.0.1:3011"
-                      style="flex: 1"
-                    />
-                    <n-button type="primary" ghost @click="applyBaseUrl">{{ t('common.apply') }}</n-button>
-                  </n-flex>
-                  
-                  <n-text strong depth="1" style="margin-top: 4px">Language</n-text>
-                  <n-flex align="center" :wrap="false">
-                    <n-select
-                      v-model:value="localeDraft"
-                      :options="[
-                        { label: 'English', value: 'en' },
-                        { label: 'Русский', value: 'ru' }
-                      ]"
-                      style="flex: 1"
-                    />
-                    <n-button @click="applyLocale">{{ t('common.apply') }}</n-button>
-                  </n-flex>
-                </n-flex>
-              </n-popover>
+              <n-tag
+                size="small"
+                :bordered="false"
+                round
+                :type="wsIndicatorType as any"
+                style="cursor: pointer; user-select: none"
+                @click="openConnectionSettings"
+              >
+                <n-icon :component="WifiOutline" style="margin-right: 6px" />
+                WS: {{ wsIndicatorText }}
+              </n-tag>
             </n-flex>
           </n-flex>
         </n-layout-header>
 
         <!-- Level 2: Navigation -->
-         <n-layout-header bordered style="height: 48px; padding: 0 16px; z-index: 10;">
+        <n-layout-header bordered style="height: 48px; padding: 0 16px; z-index: 10;">
+          <n-flex align="center" justify="space-between" :wrap="false" style="height: 100%">
             <n-menu
-                mode="horizontal"
-                :options="menuOptions"
-                :value="activeMenuKey"
-                @update:value="onMenuSelect"
-                style="line-height: 48px;"
+              mode="horizontal"
+              :options="menuOptions"
+              :value="activeMenuKey"
+              @update:value="onMenuSelect"
+              style="line-height: 48px;"
             />
+            <n-flex align="center" :wrap="false" style="gap: 8px">
+              <n-select
+                size="small"
+                :value="adapters.selectedAdapterId"
+                :options="adapters.options"
+                :loading="adapters.loading"
+                :disabled="adapters.loading"
+                :placeholder="t('console.targetAdapter')"
+                clearable
+                style="width: 320px"
+                @update:value="(v) => adapters.select(v || '')"
+              />
+              <n-button size="small" quaternary circle :disabled="adapters.loading" @click="adapters.refresh()">
+                <template #icon>
+                  <n-icon :component="RefreshOutline" />
+                </template>
+              </n-button>
+            </n-flex>
+          </n-flex>
         </n-layout-header>
 
         <n-layout-content
             embedded
-            :content-style="{ padding: '24px', backgroundColor: settings.theme === 'dark' ? undefined : '#f5f7fa' }"
+          :content-style="{ padding: '24px', backgroundColor: themeVars.bodyColor }"
             style="flex: 1;"
         >
           <!-- Using cards logic effectively requires components inside router-view to use n-card. 
@@ -261,6 +305,32 @@ onMounted(async () => {
             <n-text v-if="ws.lastError" type="error">WS Error: {{ ws.lastError }}</n-text>
           </n-flex>
         </n-layout-footer>
+
+        <n-modal v-model:show="showConnectionModal" preset="card" :title="t('common.connectionSettings')" style="width: 520px">
+          <template #header-extra>
+            <n-button size="small" type="primary" quaternary circle @click="saveConnectionSettings">
+              <template #icon>
+                <n-icon :component="SaveOutline" />
+              </template>
+            </n-button>
+          </template>
+
+          <n-flex vertical style="gap: 12px">
+            <n-flex align="center" :wrap="false" style="gap: 12px">
+              <n-text style="width: 90px">{{ t('common.ipAddress') }}</n-text>
+              <n-input v-model:value="hostDraft" placeholder="127.0.0.1" />
+            </n-flex>
+            <n-flex align="center" :wrap="false" style="gap: 12px">
+              <n-text style="width: 90px">{{ t('common.port') }}</n-text>
+              <n-input-number v-model:value="portDraft" :min="1" :max="65535" style="flex: 1" />
+            </n-flex>
+
+            <n-flex justify="end" :wrap="false" style="gap: 8px; margin-top: 4px">
+              <n-button size="small" @click="showConnectionModal = false">{{ t('common.cancel') }}</n-button>
+              <n-button size="small" type="primary" @click="saveConnectionSettings">{{ t('common.save') }}</n-button>
+            </n-flex>
+          </n-flex>
+        </n-modal>
 
       </n-layout>
     </n-message-provider>

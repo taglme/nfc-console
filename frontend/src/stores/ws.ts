@@ -6,6 +6,7 @@ import { getSdk, getSdkKey } from '../services/sdk';
 export const useWsStore = defineStore('ws', {
     state: () => ({
         connected: false,
+        connecting: false,
         lastError: '' as string,
         lastEvent: null as Event | null,
         handlersInitialized: false,
@@ -34,6 +35,7 @@ export const useWsStore = defineStore('ws', {
 
             sdk.Ws.onError(err => {
                 this.lastError = err instanceof Error ? err.message : String(err);
+                this.connecting = false;
             });
 
             this.handlersInitialized = true;
@@ -43,6 +45,7 @@ export const useWsStore = defineStore('ws', {
         reset() {
             this.disconnect();
             this.connected = false;
+            this.connecting = false;
             this.lastError = '';
             this.lastEvent = null;
             this.handlersInitialized = false;
@@ -52,6 +55,7 @@ export const useWsStore = defineStore('ws', {
         connect() {
             const sdk = getSdk();
             this.lastError = '';
+            this.connecting = true;
             this.initHandlers();
             sdk.Ws.connect();
 
@@ -63,6 +67,7 @@ export const useWsStore = defineStore('ws', {
             }
             this.syncTimer = setInterval(() => {
                 this.connected = sdk.Ws.isConnected();
+                if (this.connected) this.connecting = false;
             }, 250);
         },
 
@@ -70,6 +75,7 @@ export const useWsStore = defineStore('ws', {
             const sdk = getSdk();
             sdk.Ws.disconnect();
             this.connected = false;
+            this.connecting = false;
 
             if (this.syncTimer) {
                 clearInterval(this.syncTimer);
@@ -80,6 +86,7 @@ export const useWsStore = defineStore('ws', {
         syncConnected() {
             const sdk = getSdk();
             this.connected = sdk.Ws.isConnected();
+            if (this.connected) this.connecting = false;
         },
     },
 });
