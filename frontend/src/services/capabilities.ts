@@ -15,6 +15,32 @@ function numOrNull(v: number | null | undefined): number | null {
     return null;
 }
 
+function isAllowedByScope(allowedScopes: string[], command: string): boolean {
+    const cmd = String(command ?? '').trim();
+    if (!cmd) return false;
+
+    // The backend typically reports allowed command scopes as "command:<name>".
+    // The client draft uses raw command names like "get_tags".
+    const candidates = [cmd, `command:${cmd}`];
+
+    for (const a of allowedScopes) {
+        const allowed = String(a ?? '').trim();
+        if (!allowed) continue;
+
+        // Exact match
+        if (candidates.includes(allowed)) return true;
+
+        // Wildcard match: "command:*" or "get_*" etc.
+        if (allowed.endsWith('*')) {
+            const prefix = allowed.slice(0, -1);
+            if (prefix === '') return true;
+            if (candidates.some(c => c.startsWith(prefix))) return true;
+        }
+    }
+
+    return false;
+}
+
 export function enforceJobDraft(access: LicenseAccessResource | null | undefined, draft: JobDraft): EnforcementResult {
     const warnings: string[] = [];
     const job: JobDraft = {
@@ -54,7 +80,7 @@ export function enforceJobDraft(access: LicenseAccessResource | null | undefined
 
     const allowedCommands = constraints?.allowed_command_scopes;
     if (Array.isArray(allowedCommands) && allowedCommands.length > 0) {
-        const notAllowed = job.steps.filter(s => !allowedCommands.includes(s.command)).map(s => s.command);
+        const notAllowed = job.steps.filter(s => !isAllowedByScope(allowedCommands, s.command)).map(s => s.command);
         if (notAllowed.length > 0) {
             return {
                 ok: false,

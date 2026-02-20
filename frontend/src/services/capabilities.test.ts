@@ -101,4 +101,23 @@ describe('enforceJobDraft', () => {
         expect(res.error).toContain('does not allow command');
         expect(res.error).toContain('read_ndef');
     });
+
+    it('accepts allowed_command_scopes in "command:<name>" form', () => {
+        const a = access({
+            create_job_constraints: {
+                allowed_command_scopes: ['command:get_tags', 'command:read_ndef'],
+            },
+        });
+
+        const draft: JobDraft = {
+            repeat: 1,
+            steps: [
+                { command: 'get_tags', params: {} },
+                { command: 'read_ndef', params: {} },
+            ],
+        };
+
+        const res = enforceJobDraft(a, draft);
+        expect(res.ok).toBe(true);
+    });
 });
