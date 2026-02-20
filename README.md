@@ -25,6 +25,18 @@ wails dev
 
 The app stores API base URL in localStorage. Default is `http://127.0.0.1:3011`.
 
+### Dev `X-App-Key` via `.env`
+
+In `wails dev`, you can provide `X-App-Key` without `-ldflags` by creating a `.env` file in the repo root:
+
+```env
+NFC_CONSOLE_X_APP_KEY=YOUR_APP_KEY
+# or:
+# X_APP_KEY=YOUR_APP_KEY
+```
+
+Priority: `NFC_CONSOLE_X_APP_KEY` > `X_APP_KEY` > embedded build-time key.
+
 ## Build
 
 Build (no packaging):

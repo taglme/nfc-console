@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
 )
 
 // App struct
@@ -23,7 +25,14 @@ func (a *App) startup(ctx context.Context) {
 
 // GetEmbeddedAppKey returns the build-time embedded X-App-Key.
 func (a *App) GetEmbeddedAppKey() string {
-	return EmbeddedAppKey
+	// Allow env override (useful for `wails dev`).
+	if v := strings.TrimSpace(os.Getenv("NFC_CONSOLE_X_APP_KEY")); v != "" {
+		return v
+	}
+	if v := strings.TrimSpace(os.Getenv("X_APP_KEY")); v != "" {
+		return v
+	}
+	return strings.TrimSpace(EmbeddedAppKey)
 }
 
 // Greet returns a greeting for the given name
