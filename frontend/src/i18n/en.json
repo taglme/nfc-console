@@ -98,6 +98,9 @@
     "json": "JSON",
     "tagId": "Tag ID",
     "uid": "UID",
+    "atr": "ATR",
+    "vendor": "Vendor",
+    "product": "Model",
     "tech": "Tech",
     "record": "Record"
   },

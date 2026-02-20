@@ -98,6 +98,9 @@
     "json": "JSON",
     "tagId": "ID метки",
     "uid": "UID",
+    "atr": "ATR",
+    "vendor": "Vendor",
+    "product": "Model",
     "tech": "Технология",
     "record": "Запись"
   },

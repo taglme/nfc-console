@@ -3,7 +3,8 @@ import { computed, ref, watch } from 'vue';
 import {
     NButton,
     NCard,
-    NDataTable,
+    NDescriptions,
+    NDescriptionsItem,
     NFlex,
     NList,
     NListItem,
@@ -115,23 +116,6 @@ function openRecord(r: NdefRecordResource) {
     recordModalOpen.value = true;
 }
 
-const tagColumns = computed(() => [
-    {
-        title: t('read.tagId'),
-        key: 'tag_id',
-    },
-    {
-        title: t('read.uid'),
-        key: 'uid',
-        render: (row: any) => (row.uid ? base64ToHex(row.uid) : ''),
-    },
-    {
-        title: t('read.tech'),
-        key: 'tech',
-        render: (row: any) => row.tech ?? '',
-    },
-]);
-
 const outputMode = ref<'compact' | 'json'>('compact');
 const recordList = computed(() => ndef.value?.message ?? []);
 
@@ -191,11 +175,32 @@ function recordLabel(r: NdefRecordResource): string {
 
             <div style="margin-bottom: 16px;">
                 <n-text depth="3">{{ t('read.tags') }}</n-text>
-                <n-data-table :columns="tagColumns" :data="tags" :bordered="false">
-                    <template #empty>
-                        {{ t('common.noData') }}
-                    </template>
-                </n-data-table>
+                <div v-if="!tags.length" style="margin-top: 8px;">
+                    <n-text depth="3">{{ t('common.noData') }}</n-text>
+                </div>
+
+                <n-flex v-else vertical size="small" style="margin-top: 12px;">
+                    <n-descriptions
+                        v-for="tag in tags"
+                        :key="tag.tag_id"
+                        bordered
+                        :column="1"
+                        label-placement="left"
+                    >
+                        <n-descriptions-item :label="t('read.uid')">
+                            {{ tag.uid ? base64ToHex(tag.uid) : '–' }}
+                        </n-descriptions-item>
+                        <n-descriptions-item :label="t('read.atr')">
+                            {{ tag.atr ? base64ToHex(tag.atr) : '–' }}
+                        </n-descriptions-item>
+                        <n-descriptions-item :label="t('read.vendor')">
+                            {{ tag.vendor || '–' }}
+                        </n-descriptions-item>
+                        <n-descriptions-item :label="t('read.product')">
+                            {{ tag.product || '–' }}
+                        </n-descriptions-item>
+                    </n-descriptions>
+                </n-flex>
             </div>
 
             <div v-if="ndef">
