@@ -10,9 +10,11 @@ import {
     NModal,
     NSelect,
     NText,
+    NIcon,
     useMessage,
 } from 'naive-ui';
 import { useI18n } from 'vue-i18n';
+import { SearchOutline } from '@vicons/ionicons5';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -154,13 +156,29 @@ function recordLabel(r: NdefRecordResource): string {
 </script>
 
 <template>
-    <n-card :title="t('read.title')">
-        <n-flex vertical style="gap: 12px">
-            <n-flex align="center" justify="space-between" :wrap="true">
-                <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-button type="primary" :disabled="!canRead" :loading="sending" @click="onRead">{{ t('read.read') }}</n-button>
-                    <n-text depth="3" v-if="license.hostTier">{{ t('common.tier') }}: {{ license.hostTier }}</n-text>
-                </n-flex>
+    <n-flex vertical size="large">
+        <n-card :bordered="false" content-style="padding: 24px;">
+            <n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
+                <n-icon size="40">
+                    <SearchOutline />
+                </n-icon>
+                <div style="flex: 1">
+                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('read.pageTitle') }}</div>
+                    <n-text depth="3">{{ t('read.pageDesc') }}</n-text>
+                </div>
+                <!-- Action -->
+                <n-button
+                    type="primary"
+                    :disabled="!canRead"
+                    :loading="sending"
+                    @click="onRead"
+                    style="min-width: 120px"
+                >
+                    {{ t('read.read') }}
+                </n-button>
+            </n-flex>
+
+            <n-flex align="center" justify="end" :wrap="true" style="margin-bottom: 12px;">
 
                 <n-flex align="center" :wrap="false" style="gap: 8px">
                     <n-text depth="3">{{ t('read.recordsView') }}:</n-text>
@@ -168,29 +186,28 @@ function recordLabel(r: NdefRecordResource): string {
                 </n-flex>
             </n-flex>
 
-            <div>
+            <div style="margin-bottom: 16px;">
                 <n-text depth="3">{{ t('read.tags') }}</n-text>
-                <n-data-table :columns="tagColumns" :data="tags" :bordered="false" />
+                <n-data-table :columns="tagColumns" :data="tags" :bordered="false">
+                    <template #empty>
+                        {{ t('common.noData') }}
+                    </template>
+                </n-data-table>
             </div>
 
-            <div>
+            <div v-if="ndef">
                 <n-text depth="3">{{ t('read.ndef') }}</n-text>
-                <div v-if="!ndef">
-                    <n-text depth="3">{{ t('read.noNdef') }}</n-text>
-                </div>
-                <div v-else>
-                    <n-text depth="3">{{ t('read.readonly') }}: {{ ndef.read_only ? t('common.yes') : t('common.no') }}</n-text>
-                    <n-list bordered>
-                        <n-list-item v-for="(r, idx) in recordList" :key="idx" @click="openRecord(r)">
-                            {{ idx + 1 }}. {{ recordLabel(r) }}
-                        </n-list-item>
-                    </n-list>
-                </div>
+                <n-text depth="3">{{ t('read.readonly') }}: {{ ndef.read_only ? t('common.yes') : t('common.no') }}</n-text>
+                <n-list bordered>
+                    <n-list-item v-for="(r, idx) in recordList" :key="idx" @click="openRecord(r)">
+                        {{ idx + 1 }}. {{ recordLabel(r) }}
+                    </n-list-item>
+                </n-list>
             </div>
-        </n-flex>
+        </n-card>
 
         <n-modal v-model:show="recordModalOpen" preset="card" :title="t('read.record')" style="width: 640px">
             <pre style="white-space: pre-wrap; margin: 0">{{ selectedRecord ? JSON.stringify(selectedRecord, null, 2) : '' }}</pre>
         </n-modal>
-    </n-card>
+    </n-flex>
 </template>

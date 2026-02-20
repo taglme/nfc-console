@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { NButton, NCard, NFlex, NInput, NSelect, NText, useMessage } from 'naive-ui';
+import { NButton, NCard, NFlex, NInput, NSelect, NText, NIcon, useMessage } from 'naive-ui';
 import { useI18n } from 'vue-i18n';
+import { CopyOutline } from '@vicons/ionicons5';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -144,19 +145,35 @@ async function onDump() {
 </script>
 
 <template>
-    <n-card :title="t('dump.title')">
-        <n-flex vertical style="gap: 12px">
-            <n-flex align="center" justify="space-between" :wrap="true">
-                <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-button type="primary" :disabled="!canDump" :loading="sending" @click="onDump">{{ t('dump.scan') }}</n-button>
-                    <n-button :disabled="!outputText" @click="saveResults">{{ t('common.save') }}</n-button>
-                    <n-button :disabled="!dump" @click="clear">{{ t('common.clear') }}</n-button>
-                </n-flex>
+    <n-flex vertical size="large">
+        <n-card :bordered="false" content-style="padding: 24px;">
+            <n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
+                <n-icon size="40">
+                    <CopyOutline />
+                </n-icon>
+                <div style="flex: 1">
+                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('dump.pageTitle') }}</div>
+                    <n-text depth="3">{{ t('dump.pageDesc') }}</n-text>
+                </div>
+                <!-- Action -->
+                <n-button
+                    type="primary"
+                    :disabled="!canDump"
+                    :loading="sending"
+                    @click="onDump"
+                    style="min-width: 120px"
+                >
+                    {{ t('dump.scan') }}
+                </n-button>
+            </n-flex>
 
-                <n-flex align="center" :wrap="false" style="gap: 8px">
-                    <n-text depth="3">{{ t('dump.output') }}:</n-text>
-                    <n-select v-model:value="outputMode" :options="outputOptions" style="width: 180px" />
-                </n-flex>
+            <div style="margin-bottom: 8px;">
+                <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('dump.memorySubtitle') }}</n-text>
+            </div>
+            
+            <n-flex align="center" :wrap="true" style="gap: 8px; margin-bottom: 12px;">
+                <n-button :disabled="!outputText" @click="saveResults">{{ t('common.save') }}</n-button>
+                <n-button :disabled="!dump" @click="clear">{{ t('common.clear') }}</n-button>
             </n-flex>
 
             <n-input
@@ -165,7 +182,13 @@ async function onDump() {
                 :value="outputText"
                 :autosize="{ minRows: 12, maxRows: 24 }"
                 :placeholder="t('dump.placeholder')"
+                style="margin-bottom: 12px;"
             />
-        </n-flex>
-    </n-card>
+
+            <n-flex justify="end" align="center" :wrap="false" style="gap: 8px;">
+                <n-text depth="3">{{ t('dump.output') }}:</n-text>
+                <n-select v-model:value="outputMode" :options="outputOptions" style="width: 180px" />
+            </n-flex>
+        </n-card>
+    </n-flex>
 </template>

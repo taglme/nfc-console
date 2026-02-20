@@ -17,7 +17,7 @@ export const useAdaptersStore = defineStore('adapters', {
         selectedAdapter: s => s.list.find(a => a.adapterId === s.selectedAdapterId) ?? null,
         options: s =>
             s.list.map(a => ({
-                label: `${a.name} (${a.kind})`,
+                label: a.name,
                 value: a.adapterId,
             })),
     },

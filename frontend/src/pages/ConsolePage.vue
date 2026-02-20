@@ -10,9 +10,11 @@ import {
     NModal,
     NSelect,
     NText,
+    NIcon,
     useMessage,
 } from 'naive-ui';
 import { useI18n } from 'vue-i18n';
+import { TerminalOutline, ChevronDownOutline } from '@vicons/ionicons5';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -66,6 +68,10 @@ function download(filename: string, content: string, mime: string) {
 
 function onSaveCommands() {
     download('commands.txt', commandsText.value ?? '', 'text/plain;charset=utf-8');
+}
+
+function onSaveResults() {
+    download('results.txt', output.value ?? '', 'text/plain;charset=utf-8');
 }
 
 function onLoadCommandsClick() {
@@ -227,68 +233,93 @@ watch(
 </script>
 
 <template>
-    <n-card :title="t('console.title')">
-        <n-flex vertical style="gap: 12px">
-            <n-flex align="center" justify="space-between" :wrap="true">
-                <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-text depth="3">{{ t('console.target') }}:</n-text>
-                    <n-select
-                        v-model:value="targetEntity"
-                        :options="[
-                            { label: t('console.targetTag'), value: 'tag' },
-                            { label: t('console.targetAdapter'), value: 'adapter' },
-                        ]"
-                        style="width: 160px"
-                    />
-
-                    <n-text depth="3">{{ t('console.output') }}:</n-text>
-                    <n-select
-                        v-model:value="outputFormat"
-                        :options="[
-                            { label: t('console.formatHex'), value: 'hex' },
-                            { label: t('console.formatAscii'), value: 'ascii' },
-                        ]"
-                        style="width: 160px"
-                    />
-                </n-flex>
-
-                <n-flex :wrap="false" style="gap: 8px">
-                    <input
-                        ref="fileInputRef"
-                        type="file"
-                        accept="text/*"
-                        style="display: none"
-                        @change="onLoadCommandsSelected"
-                    />
-
-                    <n-button @click="openSnippets">{{ t('console.snippets') }}</n-button>
-                    <n-button @click="onLoadCommandsClick">{{ t('console.load') }}</n-button>
-                    <n-button @click="onSaveCommands">{{ t('console.save') }}</n-button>
-                    <n-button type="primary" :disabled="!canSend" :loading="sending" @click="send">{{ t('console.send') }}</n-button>
-                    <n-button :disabled="results.length === 0" @click="clearResults">{{ t('common.clear') }}</n-button>
-                </n-flex>
+    <n-flex vertical size="large">
+        <n-card :bordered="false" content-style="padding: 24px;">
+            <n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
+                <n-icon size="40">
+                    <TerminalOutline />
+                </n-icon>
+                <div style="flex: 1">
+                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('console.pageTitle') }}</div>
+                    <n-text depth="3">{{ t('console.pageDesc') }}</n-text>
+                </div>
+                <!-- Action -->
+                <n-button
+                    type="primary"
+                    :disabled="!canSend"
+                    :loading="sending"
+                    @click="send"
+                    style="min-width: 120px"
+                >
+                    {{ t('console.send') }}
+                </n-button>
             </n-flex>
 
-            <n-flex :wrap="true" style="gap: 12px">
+            <n-flex :wrap="true" style="gap: 24px">
                 <div style="flex: 1; min-width: 320px">
-                    <n-text depth="3">{{ t('console.commands') }}</n-text>
+                    <div style="margin-bottom: 8px;">
+                        <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('console.commandsSubtitle') }}</n-text>
+                    </div>
+                    
+                    <n-flex :wrap="false" style="gap: 8px; margin-bottom: 12px;">
+                        <n-button @click="openSnippets">
+                            {{ t('console.addDropdown') }} <n-icon style="margin-left: 4px"><ChevronDownOutline /></n-icon>
+                        </n-button>
+                        <n-button @click="onLoadCommandsClick">{{ t('common.load') }}</n-button>
+                        <n-button @click="onSaveCommands">{{ t('common.save') }}</n-button>
+                    </n-flex>
+
                     <n-input
                         v-model:value="commandsText"
                         type="textarea"
                         placeholder="30 01"
                         :autosize="{ minRows: 10, maxRows: 20 }"
+                        style="margin-bottom: 12px;"
                     />
+
+                    <n-flex justify="end" align="center" :wrap="false" style="gap: 8px;">
+                        <n-text depth="3">{{ t('console.target') }}:</n-text>
+                        <n-select
+                            v-model:value="targetEntity"
+                            :options="[
+                                { label: t('console.targetTag'), value: 'tag' },
+                                { label: t('console.targetAdapter'), value: 'adapter' },
+                            ]"
+                            style="width: 160px"
+                        />
+                    </n-flex>
                 </div>
 
                 <div style="flex: 1; min-width: 320px">
-                    <n-text depth="3">{{ t('console.results') }}</n-text>
+                    <div style="margin-bottom: 8px;">
+                        <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('console.resultsSubtitle') }}</n-text>
+                    </div>
+
+                    <n-flex :wrap="false" style="gap: 8px; margin-bottom: 12px;">
+                        <n-button :disabled="results.length === 0" @click="onSaveResults">{{ t('common.save') }}</n-button>
+                        <n-button :disabled="results.length === 0" @click="clearResults">{{ t('common.clear') }}</n-button>
+                    </n-flex>
+
                     <n-input
                         :value="output"
                         type="textarea"
                         readonly
                         :autosize="{ minRows: 10, maxRows: 20 }"
                         :placeholder="t('console.resultsPlaceholder')"
+                        style="margin-bottom: 12px;"
                     />
+
+                    <n-flex justify="end" align="center" :wrap="false" style="gap: 8px;">
+                        <n-text depth="3">{{ t('console.output') }}:</n-text>
+                        <n-select
+                            v-model:value="outputFormat"
+                            :options="[
+                                { label: t('console.formatHex'), value: 'hex' },
+                                { label: t('console.formatAscii'), value: 'ascii' },
+                            ]"
+                            style="width: 160px"
+                        />
+                    </n-flex>
                 </div>
             </n-flex>
 
@@ -317,6 +348,14 @@ watch(
                     </n-flex>
                 </n-flex>
             </n-modal>
-        </n-flex>
-    </n-card>
+        </n-card>
+        
+        <input
+            ref="fileInputRef"
+            type="file"
+            accept="text/*"
+            style="display: none"
+            @change="onLoadCommandsSelected"
+        />
+    </n-flex>
 </template>

@@ -15,7 +15,8 @@
     "read": "Read",
     "write": "Write",
     "dump": "Dump",
-    "other": "Other"
+    "other": "Other",
+    "theme": "Theme"
   },
   "common": {
     "apply": "Apply",
@@ -35,15 +36,20 @@
     "enterPort": "Enter port",
     "save": "Save",
     "clear": "Clear",
-    "load": "Load"
-    ,
+    "load": "Load",
     "jobSubmitted": "Job submitted.",
     "yes": "yes",
     "no": "no",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "noData": "No data"
   },
   "console": {
     "title": "Console",
+    "pageTitle": "Tag console",
+    "pageDesc": "Send commands to tags. Commands are specified in HEX format (e.g. 'FF 00 C1'). 'Target' toggle allows sending commands to tag or adapter.",
+    "commandsSubtitle": "Commands",
+    "resultsSubtitle": "Results",
+    "addDropdown": "Add",
     "target": "Target",
     "output": "Output",
     "send": "Send",
@@ -69,6 +75,8 @@
   },
   "read": {
     "title": "Read",
+    "pageTitle": "Read tag",
+    "pageDesc": "Read NDEF message and tag information.",
     "read": "Read",
     "recordsView": "Records view",
     "tags": "Tags",
@@ -84,10 +92,15 @@
   },
   "write": {
     "title": "Write",
+    "pageTitle": "Write NDEF tag",
+    "pageDesc": "Write NDEF message to NFC tag. The message can consist of several records. The memory lock option protects against overwriting (this action cannot be undone).",
+    "recordsSubtitle": "NDEF records",
+    "settingsSubtitle": "Settings",
+    "addRecordDropdown": "Add",
     "write": "Write",
     "permanentLock": "Permanent lock tag",
     "addRecord": "Add record",
-    "noRecords": "No records. Click “Add record”.",
+    "noRecords": "Add a new record",
     "lastRun": "Last write run",
     "modalTitle": "NDEF Record",
     "type": "Type",
@@ -100,6 +113,9 @@
   },
   "dump": {
     "title": "Dump",
+    "pageTitle": "Tag memory dump",
+    "pageDesc": "Read all tag memory content",
+    "memorySubtitle": "Memory dump",
     "scan": "Scan",
     "output": "Output",
     "placeholder": "Dump output will appear here",

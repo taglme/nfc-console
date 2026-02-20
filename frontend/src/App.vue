@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, h, Component } from 'vue';
 import {
   NButton,
   NConfigProvider,
@@ -11,6 +11,7 @@ import {
   NLayoutContent,
   NLayoutHeader,
   NLayoutFooter,
+  NLayoutSider,
   NModal,
   NSelect,
   NMenu,
@@ -20,11 +21,28 @@ import {
   darkTheme,
   NTag,
   useThemeVars,
+  GlobalThemeOverrides,
+  ruRU,
+  enUS,
 } from 'naive-ui';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
-import { RefreshOutline, SaveOutline, WifiOutline } from '@vicons/ionicons5';
+import logoLight from './assets/images/logo_c.png';
+import logoDark from './assets/images/logo_w.png';
+
+import {
+  RefreshOutline,
+  SaveOutline,
+  WifiOutline,
+  TerminalOutline,
+  SearchOutline,
+  CreateOutline,
+  CopyOutline,
+  SettingsOutline,
+  MoonOutline,
+  SunnyOutline,
+} from '@vicons/ionicons5';
 
 import { useAppStore } from './stores/app';
 import { useAdaptersStore } from './stores/adapters';
@@ -57,6 +75,8 @@ const { t, locale } = useI18n();
 
 const themeVars = useThemeVars();
 
+const isCollapsed = ref(false);
+
 const showConnectionModal = ref(false);
 const hostDraft = ref('127.0.0.1');
 const portDraft = ref<number>(3011);
@@ -66,17 +86,56 @@ const localeOptions = [
   { label: 'RU', value: 'ru' },
 ] as const;
 
+function renderIcon(icon: Component) {
+  return () => h(NIcon, null, { default: () => h(icon) });
+}
+
 const menuOptions = computed(() => [
-  { label: t('menu.console'), key: '/' },
-  { label: t('menu.read'), key: '/read' },
-  { label: t('menu.write'), key: '/write' },
-  { label: t('menu.dump'), key: '/dump' },
-  { label: t('menu.other'), key: '/other' },
+  { label: t('menu.console'), key: '/', icon: renderIcon(TerminalOutline) },
+  { label: t('menu.read'), key: '/read', icon: renderIcon(SearchOutline) },
+  { label: t('menu.write'), key: '/write', icon: renderIcon(CreateOutline) },
+  { label: t('menu.dump'), key: '/dump', icon: renderIcon(CopyOutline) },
+  { label: t('menu.other'), key: '/other', icon: renderIcon(SettingsOutline) },
 ]);
 
 const activeMenuKey = computed(() => route.path);
 
 const theme = computed(() => (settings.theme === 'dark' ? darkTheme : null));
+const nLocale = computed(() => (locale.value === 'ru' ? ruRU : enUS));
+
+const themeOverrides: GlobalThemeOverrides = {
+  common: {
+    borderRadius: '8px',
+    primaryColor: '#348be0',
+    primaryColorHover: '#52a2f0',
+    primaryColorPressed: '#226db8',
+    primaryColorSuppl: '#52a2f0',
+  },
+  Card: {
+    borderRadius: '12px',
+  },
+  Button: {
+    textColorPrimary: '#ffffff',
+    textColorHoverPrimary: '#ffffff',
+    textColorPressedPrimary: '#ffffff',
+    textColorFocusPrimary: '#ffffff',
+    colorPrimary: '#348be0',
+    colorHoverPrimary: '#52a2f0',
+    colorPressedPrimary: '#226db8',
+    colorFocusPrimary: '#52a2f0',
+    borderPrimary: '1px solid #348be0',
+    borderHoverPrimary: '1px solid #52a2f0',
+    borderPressedPrimary: '1px solid #226db8',
+    borderFocusPrimary: '1px solid #52a2f0',
+  },
+  Menu: {
+    itemColorActive: 'transparent',
+    itemColorActiveHover: 'transparent',
+    itemColorActiveCollapsed: 'transparent',
+    itemTextColorActive: '#348be0',
+    itemIconColorActive: '#348be0',
+  }
+};
 
 const headerStyle = computed(() => ({
   backgroundColor: themeVars.value.primaryColor,
@@ -133,6 +192,12 @@ function openConnectionSettings() {
 function saveConnectionSettings() {
   const host = hostDraft.value.trim();
   const port = Math.trunc(portDraft.value);
+
+  const { host: currHost, port: currPort } = parseBaseUrlToHostPort(settings.baseUrl);
+  if (host === currHost && port === currPort) {
+    showConnectionModal.value = false;
+    return;
+  }
 
   if (!host) {
     message.error(t('common.enterHost'));
@@ -201,133 +266,147 @@ onMounted(async () => {
 </script>
 
 <template>
-  <n-config-provider :theme="theme">
+  <n-config-provider :theme="theme" :theme-overrides="themeOverrides" :locale="nLocale">
     <n-message-provider>
-      <n-layout style="height: 100vh; display: flex; flex-direction: column;" position="absolute">
-        
-        <!-- Level 1: System Header -->
-        <n-layout-header :style="{ ...headerStyle, padding: '0 16px', height: '56px', zIndex: 20 }">
-          <n-flex align="center" justify="space-between" :wrap="false" style="height: 100%;">
-            <!-- Brand -->
-            <n-flex align="center" :wrap="false" style="gap: 12px">
-              <div
-                style="
-                  font-weight: 800;
-                  font-size: 18px;
-                  line-height: 1;
-                "
-              >
-                TAGLME <span style="opacity: 0.9">CONSOLE</span>
-              </div>
+      <n-layout has-sider style="height: 100vh;">
 
-              <n-tag size="small" :bordered="false" type="default" round>
-                {{ about.info?.hostName || 'Local' }}
-              </n-tag>
-            </n-flex>
-
-            <!-- Actions -->
-            <n-flex align="center" :wrap="false" style="gap: 12px;">
-              <n-select
-                size="small"
-                :value="settings.locale"
-                :options="(localeOptions as any)"
-                style="width: 84px"
-                @update:value="(v) => setLocale((v || 'en') as any)"
-              />
-
-              <n-tag
-                size="small"
-                :bordered="false"
-                round
-                :type="wsIndicatorType as any"
-                style="cursor: pointer; user-select: none"
-                @click="openConnectionSettings"
-              >
-                <n-icon :component="WifiOutline" style="margin-right: 6px" />
-                WS: {{ wsIndicatorText }}
-              </n-tag>
-            </n-flex>
-          </n-flex>
-        </n-layout-header>
-
-        <!-- Level 2: Navigation -->
-        <n-layout-header bordered style="height: 48px; padding: 0 16px; z-index: 10;">
-          <n-flex align="center" justify="space-between" :wrap="false" style="height: 100%">
-            <n-menu
-              mode="horizontal"
-              :options="menuOptions"
-              :value="activeMenuKey"
-              @update:value="onMenuSelect"
-              style="line-height: 48px;"
-            />
-            <n-flex align="center" :wrap="false" style="gap: 8px">
-              <n-select
-                size="small"
-                :value="adapters.selectedAdapterId"
-                :options="adapters.options"
-                :loading="adapters.loading"
-                :disabled="adapters.loading"
-                :placeholder="t('console.targetAdapter')"
-                clearable
-                style="width: 320px"
-                @update:value="(v) => adapters.select(v || '')"
-              />
-              <n-button size="small" quaternary circle :disabled="adapters.loading" @click="adapters.refresh()">
-                <template #icon>
-                  <n-icon :component="RefreshOutline" />
-                </template>
-              </n-button>
-            </n-flex>
-          </n-flex>
-        </n-layout-header>
-
-        <n-layout-content
-            embedded
-          :content-style="{ padding: '24px', backgroundColor: themeVars.bodyColor }"
-            style="flex: 1;"
+        <!-- Sidebar -->
+        <n-layout-sider
+          bordered
+          collapse-mode="width"
+          :collapsed-width="64"
+          :width="220"
+          :native-scrollbar="false"
+          show-trigger="bar"
+          v-model:collapsed="isCollapsed"
+          content-style="display: flex; flex-direction: column; height: 100%;"
         >
-          <!-- Using cards logic effectively requires components inside router-view to use n-card. 
-               We will assume they do or wrap them if needed, but for now just setting the canvas bg. -->
-          <router-view />
-        </n-layout-content>
-
-        <n-layout-footer bordered style="padding: 4px 16px; font-size: 11px;">
-           <n-flex :wrap="true" style="gap: 16px;">
-            <n-text depth="3">
-              {{ t('common.version') }}: {{ about.info?.version || '—' }}
-            </n-text>
-            <n-text depth="3">
-              {{ t('common.tier') }}: {{ license.hostTier }}
-            </n-text>
-            <n-text depth="3">
-              App key: {{ appKeyStatus }}
-            </n-text>
-            <n-text v-if="ws.lastError" type="error">WS Error: {{ ws.lastError }}</n-text>
+          <!-- Brand -->
+          <n-flex align="center" justify="center" style="height: 64px; box-sizing: border-box; border-bottom: 1px solid var(--n-border-color); overflow: hidden;">
+             <div style="display: flex; align-items: center; white-space: nowrap; gap: 8px;">
+                <img :src="settings.theme === 'dark' ? logoDark : logoLight" alt="logo" style="width: 32px; height: 32px; object-fit: contain;" />
+                <span v-if="!isCollapsed" style="font-weight: 800; font-size: 18px;">Console</span>
+             </div>
           </n-flex>
-        </n-layout-footer>
 
-        <n-modal v-model:show="showConnectionModal" preset="card" :title="t('common.connectionSettings')" style="width: 520px">
-          <template #header-extra>
-            <n-button size="small" type="primary" quaternary circle @click="saveConnectionSettings">
-              <template #icon>
-                <n-icon :component="SaveOutline" />
-              </template>
+          <n-menu
+            :collapsed-width="64"
+            :collapsed-icon-size="22"
+            :options="menuOptions"
+            :value="activeMenuKey"
+            @update:value="onMenuSelect"
+            style="margin-top: 12px;"
+          />
+
+          <!-- Bottom Actions (Theme) -->
+          <div style="padding: 12px; border-top: 1px solid var(--n-border-color); margin-top: auto;">
+            <n-button
+              quaternary
+              :style="isCollapsed ? 'width: 100%; justify-content: center; padding: 0;' : 'width: 100%; justify-content: flex-start; padding: 0 16px; font-size: 14px;'"
+              @click="settings.setTheme(settings.theme === 'dark' ? 'light' : 'dark')"
+            >
+               <template #icon>
+                  <n-icon size="22" :component="settings.theme === 'dark' ? SunnyOutline : MoonOutline" />
+               </template>
+               <span v-if="!isCollapsed" style="margin-left: 8px;">{{ t('menu.theme') }}</span>
             </n-button>
-          </template>
+          </div>
+        </n-layout-sider>
 
+        <!-- Main Layout -->
+        <n-layout content-style="display: flex; flex-direction: column; height: 100%;">
+          
+          <!-- Header -->
+          <n-layout-header bordered style="height: 64px; padding: 0 24px;">
+             <n-flex align="center" justify="space-between" style="height: 100%;">
+                
+                <!-- Center / Search / Adapters -->
+                <n-flex align="center" :wrap="false" style="gap: 4px;">
+                   <n-select
+                      size="small"
+                      :value="adapters.selectedAdapterId"
+                      :options="adapters.options"
+                      :loading="adapters.loading"
+                      :disabled="adapters.loading"
+                      :placeholder="t('console.targetAdapter')"
+                      clearable
+                      style="width: 280px"
+                      @update:value="(v) => adapters.select(v || '')"
+                    />
+                    <n-button size="small" quaternary circle :disabled="adapters.loading" @click="adapters.refresh()">
+                      <template #icon>
+                        <n-icon :component="RefreshOutline" />
+                      </template>
+                    </n-button>
+                </n-flex>
+
+                <!-- Right Actions -->
+                <n-flex align="center" :wrap="false" style="gap: 12px;">
+
+                  <n-button
+                    quaternary
+                    size="small"
+                    @click="setLocale(settings.locale === 'en' ? 'ru' : 'en')"
+                    style="font-weight: bold; font-size: 14px; padding: 0 6px;"
+                  >
+                    {{ settings.locale.toUpperCase() }}
+                  </n-button>
+
+                  <n-tag
+                    size="small"
+                    :bordered="false"
+                    round
+                    :type="wsIndicatorType as any"
+                    style="cursor: pointer; user-select: none"
+                    @click="openConnectionSettings"
+                  >
+                    <n-icon :component="WifiOutline" style="margin-right: 6px" />
+                    {{ wsIndicatorText }}
+                  </n-tag>
+                </n-flex>
+             </n-flex>
+          </n-layout-header>
+
+          <n-layout-content
+              :content-style="{ padding: '24px', paddingBottom: '32px', backgroundColor: settings.theme === 'dark' ? '#101014' : '#f5f7fa', minHeight: '100%' }"
+              :native-scrollbar="false"
+          >
+            <div style="max-width: 1200px; margin: 0 auto; width: 100%;">
+                <router-view />
+            </div>
+          </n-layout-content>
+
+          <n-layout-footer bordered position="absolute" style="padding: 4px 16px; font-size: 11px; bottom: 0; z-index: 1;">
+             <n-flex :wrap="true" style="gap: 16px;">
+              <n-text depth="3">
+                {{ t('common.version') }}: {{ about.info?.version || '—' }}
+              </n-text>
+              <n-text depth="3">
+                {{ t('common.tier') }}: {{ license.hostTier }}
+              </n-text>
+              <n-text depth="3">
+                App key: {{ appKeyStatus }}
+              </n-text>
+              <n-text v-if="ws.lastError" type="error">WS Error: {{ ws.lastError }}</n-text>
+            </n-flex>
+          </n-layout-footer>
+        </n-layout>
+
+        <n-modal
+          v-model:show="showConnectionModal"
+          preset="card"
+          :title="t('common.connectionSettings')"
+          style="width: 360px"
+          @after-leave="saveConnectionSettings"
+        >
           <n-flex vertical style="gap: 12px">
             <n-flex align="center" :wrap="false" style="gap: 12px">
               <n-text style="width: 90px">{{ t('common.ipAddress') }}</n-text>
-              <n-input v-model:value="hostDraft" placeholder="127.0.0.1" />
+              <n-input v-model:value="hostDraft" placeholder="127.0.0.1" style="flex: 1" />
             </n-flex>
             <n-flex align="center" :wrap="false" style="gap: 12px">
               <n-text style="width: 90px">{{ t('common.port') }}</n-text>
-              <n-input-number v-model:value="portDraft" :min="1" :max="65535" style="flex: 1" />
-            </n-flex>
-
-            <n-flex justify="end" :wrap="false" style="gap: 8px; margin-top: 4px">
-              <n-button size="small" @click="showConnectionModal = false">{{ t('common.cancel') }}</n-button>
-              <n-button size="small" type="primary" @click="saveConnectionSettings">{{ t('common.save') }}</n-button>
+              <n-input-number v-model:value="portDraft" :show-button="false" :min="1" :max="65535" style="flex: 1" />
             </n-flex>
           </n-flex>
         </n-modal>

@@ -1,26 +1,45 @@
-html {
-    background-color: rgba(27, 38, 54, 1);
-    text-align: center;
-    color: white;
-}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&display=swap');
 
 body {
     margin: 0;
-    color: white;
-    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
-}
-
-@font-face {
-    font-family: "Nunito";
-    font-style: normal;
-    font-weight: 400;
-    src: local(""),
-    url("assets/fonts/nunito-v16-latin-regular.woff2") format("woff2");
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+        "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+        sans-serif;
 }
 
 #app {
     height: 100vh;
-    text-align: center;
+}
+
+/* Make Ionicons5 outline variants thinner */
+.n-icon svg path,
+.n-icon svg line,
+.n-icon svg rect,
+.n-icon svg circle,
+.n-icon svg ellipse,
+.n-icon svg polygon,
+.n-icon svg polyline {
+    stroke-width: 22 !important;
+}
+
+.n-icon svg {
+    --ionicon-stroke-width: 22px;
+}
+
+/* Active menu item styling: blue left stripe, no background fill */
+.n-menu-item-content--selected {
+    background-color: transparent !important;
+}
+
+.n-menu-item-content--selected::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 4px;
+    background-color: #0066cc;
+    border-radius: 0 4px 4px 0;
+    z-index: 10;
+    pointer-events: none;
 }

@@ -5,9 +5,11 @@ import {
     NCard,
     NCheckbox,
     NDivider,
+    NDropdown,
     NFlex,
     NForm,
     NFormItem,
+    NIcon,
     NInput,
     NModal,
     NSelect,
@@ -15,6 +17,7 @@ import {
     useMessage,
 } from 'naive-ui';
 import { useI18n } from 'vue-i18n';
+import { CreateOutline, ChevronDownOutline } from '@vicons/ionicons5';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -59,16 +62,16 @@ const resultsText = ref('');
 const canWrite = computed(() => !!adapters.selectedAdapterId && !sending.value);
 
 const typeOptions = [
-    { label: 'Raw', value: 'raw' },
-    { label: 'URL', value: 'url' },
-    { label: 'Text', value: 'text' },
-    { label: 'URI', value: 'uri' },
-    { label: 'VCard', value: 'vcard' },
-    { label: 'MIME', value: 'mime' },
-    { label: 'Phone', value: 'phone' },
-    { label: 'Geo', value: 'geo' },
-    { label: 'AAR', value: 'aar' },
-    { label: 'Poster', value: 'poster' },
+    { label: 'Raw', value: 'raw', key: 'raw' },
+    { label: 'URL', value: 'url', key: 'url' },
+    { label: 'Text', value: 'text', key: 'text' },
+    { label: 'URI', value: 'uri', key: 'uri' },
+    { label: 'VCard', value: 'vcard', key: 'vcard' },
+    { label: 'MIME', value: 'mime', key: 'mime' },
+    { label: 'Phone', value: 'phone', key: 'phone' },
+    { label: 'Geo', value: 'geo', key: 'geo' },
+    { label: 'AAR', value: 'aar', key: 'aar' },
+    { label: 'Poster', value: 'poster', key: 'poster' },
 ];
 
 function defaultDataFor(type: RecordType): any {
@@ -113,10 +116,10 @@ function defaultDataFor(type: RecordType): any {
     }
 }
 
-function openAdd() {
+function openAdd(type: string | number = 'text') {
     editIndex.value = null;
-    draftType.value = 'text';
-    draftDataText.value = JSON.stringify(defaultDataFor('text'), null, 2);
+    draftType.value = type as RecordType;
+    draftDataText.value = JSON.stringify(defaultDataFor(type as RecordType), null, 2);
     modalOpen.value = true;
 }
 
@@ -327,33 +330,53 @@ async function onWrite() {
 </script>
 
 <template>
-    <n-card :title="t('write.title')">
-        <n-flex vertical style="gap: 12px">
-            <n-flex align="center" justify="space-between" :wrap="true">
-                <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-button type="primary" :disabled="!canWrite" :loading="sending" @click="onWrite">{{ t('write.write') }}</n-button>
-                    <n-checkbox v-model:checked="permanentLock">{{ t('write.permanentLock') }}</n-checkbox>
-                </n-flex>
-
-                <n-flex align="center" :wrap="true" style="gap: 8px">
-                    <n-button @click="openAdd">{{ t('write.addRecord') }}</n-button>
-                    <n-button :disabled="records.length === 0" @click="saveToFile">{{ t('common.save') }}</n-button>
-                    <label>
-                        <input type="file" accept=".nfc,application/json" style="display:none" @change="loadFromFile" />
-                        <n-button>{{ t('common.load') }}</n-button>
-                    </label>
-                </n-flex>
+    <n-flex vertical size="large">
+        <n-card :bordered="false" content-style="padding: 24px;">
+            <n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
+                <n-icon size="40">
+                    <CreateOutline />
+                </n-icon>
+                <div style="flex: 1">
+                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('write.pageTitle') }}</div>
+                    <n-text depth="3">{{ t('write.pageDesc') }}</n-text>
+                </div>
+                <!-- Action -->
+                <n-button
+                    type="primary"
+                    :disabled="!canWrite"
+                    :loading="sending"
+                    @click="onWrite"
+                    style="min-width: 120px"
+                >
+                    {{ t('write.write') }}
+                </n-button>
             </n-flex>
 
-            <n-divider />
+            <div style="margin-bottom: 8px;">
+                <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('write.recordsSubtitle') }}</n-text>
+            </div>
+            
+            <n-flex align="center" :wrap="true" style="gap: 8px; margin-bottom: 24px;">
+                <n-dropdown trigger="click" :options="typeOptions" @select="openAdd">
+                    <n-button>
+                        {{ t('write.addRecordDropdown') }} 
+                        <n-icon style="margin-left: 4px"><ChevronDownOutline /></n-icon>
+                    </n-button>
+                </n-dropdown>
+                <label>
+                    <input type="file" accept=".nfc,application/json" style="display:none" @change="loadFromFile" />
+                    <n-button>{{ t('common.load') }}</n-button>
+                </label>
+                <n-button :disabled="records.length === 0" @click="saveToFile">{{ t('common.save') }}</n-button>
+            </n-flex>
 
-            <div v-if="records.length === 0">
+            <div v-if="records.length === 0" style="text-align: center; margin-bottom: 32px; padding: 32px 0;">
                 <n-text depth="3">{{ t('write.noRecords') }}</n-text>
             </div>
 
-            <div v-else>
+            <div v-else style="margin-bottom: 32px;">
                 <n-flex vertical style="gap: 8px">
-                    <n-card v-for="(r, idx) in records" :key="idx" size="small">
+                    <n-card v-for="(r, idx) in records" :key="idx" size="small" bordered>
                         <n-flex align="center" justify="space-between" :wrap="false">
                             <n-flex align="center" :wrap="false" style="gap: 8px">
                                 <n-text strong>{{ idx + 1 }}.</n-text>
@@ -365,20 +388,18 @@ async function onWrite() {
                                 <n-button size="small" @click="move(idx, -1)">Up</n-button>
                                 <n-button size="small" @click="move(idx, 1)">Down</n-button>
                                 <n-button size="small" @click="openEdit(idx)">Edit</n-button>
-                                <n-button size="small" type="error" @click="remove(idx)">Remove</n-button>
+                                <n-button size="small" @click="remove(idx)">Remove</n-button>
                             </n-flex>
                         </n-flex>
                     </n-card>
                 </n-flex>
             </div>
 
-            <n-divider />
-
-            <div>
-                <n-text depth="3">{{ t('write.lastRun') }}</n-text>
-                <n-input type="textarea" readonly :value="resultsText" :autosize="{ minRows: 6, maxRows: 12 }" />
+            <div style="margin-bottom: 12px;">
+                <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('write.settingsSubtitle') }}</n-text>
             </div>
-        </n-flex>
+            <n-checkbox v-model:checked="permanentLock">{{ t('write.permanentLock') }}</n-checkbox>
+        </n-card>
 
         <n-modal v-model:show="modalOpen" preset="card" :title="t('write.modalTitle')" style="width: 720px">
             <n-form label-placement="top">
@@ -397,9 +418,9 @@ async function onWrite() {
 
                 <n-flex justify="end" :wrap="false" style="gap: 8px">
                     <n-button @click="modalOpen = false">{{ t('write.cancel') }}</n-button>
-                    <n-button type="primary" @click="saveDraft">Save</n-button>
+                    <n-button @click="saveDraft">Save</n-button>
                 </n-flex>
             </n-form>
         </n-modal>
-    </n-card>
+    </n-flex>
 </template>

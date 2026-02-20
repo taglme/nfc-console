@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { NButton, NCard, NFlex, NInput, NText, useMessage } from 'naive-ui';
+import { NButton, NCard, NFlex, NInput, NText, useMessage, NIcon } from 'naive-ui';
 import { useI18n } from 'vue-i18n';
+import { LockClosedOutline, TrashOutline } from '@vicons/ionicons5';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -89,30 +90,50 @@ async function onFormat() {
 </script>
 
 <template>
-    <n-card :title="t('other.title')">
-        <n-flex vertical style="gap: 12px">
-            <n-card size="small" :title="t('other.lockTitle')">
-                <n-flex align="center" justify="space-between" :wrap="true">
+    <n-flex vertical size="large">
+        <n-card :bordered="false" content-style="padding: 24px;">
+            <n-flex align="center" :wrap="false" style="gap: 24px">
+                <n-icon size="40">
+                    <LockClosedOutline />
+                </n-icon>
+                <div style="flex: 1">
+                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('other.lockTitle') }}</div>
                     <n-text depth="3">{{ t('other.lockDesc') }}</n-text>
-                    <n-button type="primary" :loading="sendingLock" :disabled="!adapters.selectedAdapterId" @click="onLock">
-                        {{ t('other.lock') }}
-                    </n-button>
-                </n-flex>
-            </n-card>
+                </div>
+                <!-- Action -->
+                <n-button
+                    type="primary"
+                    :loading="sendingLock"
+                    :disabled="!adapters.selectedAdapterId"
+                    @click="onLock"
+                    style="min-width: 120px"
+                >
+                    {{ t('other.lock') }}
+                </n-button>
+            </n-flex>
+        </n-card>
 
-            <n-card size="small" :title="t('other.formatTitle')">
-                <n-flex align="center" justify="space-between" :wrap="true">
+        <n-card :bordered="false" content-style="padding: 24px;">
+            <n-flex align="center" :wrap="false" style="gap: 24px">
+                <n-icon size="40">
+                    <TrashOutline />
+                </n-icon>
+                <div style="flex: 1">
+                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('other.formatTitle') }}</div>
                     <n-text depth="3">{{ t('other.formatDesc') }}</n-text>
-                    <n-button type="primary" :loading="sendingFormat" :disabled="!adapters.selectedAdapterId" @click="onFormat">
-                        {{ t('other.format') }}
-                    </n-button>
-                </n-flex>
-            </n-card>
+                </div>
+                <!-- Action -->
+                 <n-button
+                    type="primary"
+                    :loading="sendingFormat"
+                    :disabled="!adapters.selectedAdapterId"
+                    @click="onFormat"
+                    style="min-width: 120px"
+                >
+                    {{ t('other.format') }}
+                </n-button>
+            </n-flex>
+        </n-card>
 
-            <div>
-                <n-text depth="3">{{ t('other.lastRun') }}</n-text>
-                <n-input type="textarea" readonly :value="resultsText" :autosize="{ minRows: 6, maxRows: 12 }" />
-            </div>
-        </n-flex>
-    </n-card>
+    </n-flex>
 </template>
