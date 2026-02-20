@@ -55,6 +55,7 @@ import { resetSdk } from './services/sdk';
 import { useRunsStore } from './stores/runs';
 import { useRateLimitStore } from './stores/rateLimit';
 import { useSnippetsStore } from './stores/snippets';
+import JobStatusModal from './components/JobStatusModal.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -268,6 +269,7 @@ onMounted(async () => {
 <template>
   <n-config-provider :theme="theme" :theme-overrides="themeOverrides" :locale="nLocale">
     <n-message-provider>
+      <JobStatusModal />
       <n-layout has-sider style="height: 100vh;">
 
         <!-- Sidebar -->

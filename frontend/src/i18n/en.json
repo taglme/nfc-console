@@ -38,10 +38,21 @@
     "clear": "Clear",
     "load": "Load",
     "jobSubmitted": "Job submitted.",
+    "close": "Close",
     "yes": "yes",
     "no": "no",
     "cancel": "Cancel",
     "noData": "No data"
+  },
+  "jobModal": {
+    "pending": "Waiting for tag",
+    "activated": "Running tag operation",
+    "finished": "Completed successfully",
+    "deleted": "Job was deleted",
+    "error": "Error: {errorMessage}",
+    "scheduled": "Scheduled",
+    "success": "Success",
+    "failed": "Failed"
   },
   "console": {
     "title": "Console",

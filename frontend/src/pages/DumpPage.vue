@@ -8,6 +8,7 @@ import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
 import { useLicenseStore } from '../stores/license';
 import { useRunsStore } from '../stores/runs';
+import { useJobModalStore } from '../stores/jobModal';
 import { type JobDraft } from '../services/capabilities';
 
 import { Command } from 'nfc-jsclient/dist/models/commands';
@@ -25,6 +26,7 @@ const { t } = useI18n();
 const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const runs = useRunsStore();
+const jobModal = useJobModalStore();
 
 const sending = ref(false);
 const lastJobId = ref('');
@@ -136,6 +138,7 @@ async function onDump() {
         }
         lastJobId.value = res.jobId;
         message.success(t('common.jobSubmitted'));
+        jobModal.openForJob({ adapterId: adapters.selectedAdapterId, jobId: res.jobId, jobName: 'dump' });
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {

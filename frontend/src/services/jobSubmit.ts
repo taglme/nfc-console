@@ -1,9 +1,27 @@
 import type { NewJob } from 'nfc-jsclient/dist/models/jobs';
 
 import { getSdk } from './sdk';
-import { enforceJobDraft, type JobDraft } from './capabilities';
-import type { LicenseAccessResource } from 'nfc-jsclient/dist/models/license';
+import { enforceJobDraft, type AccessLike, type JobDraft } from './capabilities';
 import { useRateLimitStore } from '../stores/rateLimit';
+import { useAppStore } from '../stores/app';
+
+function hasScope(scopes: string[] | null | undefined, required: string): boolean {
+    const req = String(required ?? '').trim().toLowerCase();
+    if (!req) return false;
+
+    for (const raw of scopes ?? []) {
+        const s = String(raw ?? '').trim().toLowerCase();
+        if (!s) continue;
+
+        if (s === req || s === '*') return true;
+        // Prefix wildcard: "job:*" matches "job:delete".
+        if (s.endsWith(':*')) {
+            const prefix = s.slice(0, -1); // keep ':'
+            if (req.startsWith(prefix)) return true;
+        }
+    }
+    return false;
+}
 
 export type SubmitResult =
     | { ok: true; jobId: string }
@@ -19,10 +37,15 @@ export async function submitJob(params: {
     jobName: string;
     expireAfter?: number;
     draft: JobDraft;
-    access: LicenseAccessResource | null;
+    access: AccessLike | null;
     onWarning?: (w: string) => void;
 }): Promise<SubmitResult> {
     const expireAfter = params.expireAfter ?? 60;
+
+    // Ensure X-App-Key is loaded (Wails binding) before any API calls.
+    // Without it, the server may respond 401/403 and the browser may surface it as a generic "Network error".
+    const app = useAppStore();
+    await app.loadEmbeddedAppKey();
 
     const enforced = enforceJobDraft(params.access, params.draft);
     if (!enforced.ok) {
@@ -31,7 +54,7 @@ export async function submitJob(params: {
     enforced.warnings.forEach(w => params.onWarning?.(w));
 
     const rateLimit = useRateLimitStore();
-    const rateCheck = rateLimit.check(params.access?.create_job_rate_limit);
+    const rateCheck = rateLimit.check(params.access?.create_job_rate_limit ?? undefined);
     if (!rateCheck.ok) {
         const seconds = Math.ceil(rateCheck.waitMs / 1000);
         return {
@@ -50,7 +73,13 @@ export async function submitJob(params: {
     };
 
     const sdk = getSdk();
-    await sdk.Jobs.deleteAll(params.adapterId);
+
+    // Clearing the job queue requires `job:delete` scope.
+    // Many licenses allow job creation but do not allow deletion.
+    // In that case, skip queue cleanup instead of failing the primary action.
+    if (hasScope(params.access?.allowed_scopes, 'job:delete')) {
+        await sdk.Jobs.deleteAll(params.adapterId);
+    }
     const created = await sdk.Jobs.add(params.adapterId, job);
 
     // record only after successful submission

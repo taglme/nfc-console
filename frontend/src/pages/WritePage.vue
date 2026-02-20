@@ -23,6 +23,7 @@ import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
 import { useLicenseStore } from '../stores/license';
 import { useRunsStore } from '../stores/runs';
+import { useJobModalStore } from '../stores/jobModal';
 import { type JobDraft } from '../services/capabilities';
 import { cleanHex, hexToBase64 } from '../utils/encoding';
 
@@ -41,6 +42,7 @@ const { t } = useI18n();
 const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const runs = useRunsStore();
+const jobModal = useJobModalStore();
 
 const records = ref<RecordDraft[]>([]);
 const permanentLock = ref(false);
@@ -321,6 +323,7 @@ async function onWrite() {
         }
         lastJobId.value = res.jobId;
         message.success(t('common.jobSubmitted'));
+        jobModal.openForJob({ adapterId: adapters.selectedAdapterId, jobId: res.jobId, jobName: 'write' });
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {

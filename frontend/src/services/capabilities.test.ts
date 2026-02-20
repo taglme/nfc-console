@@ -61,6 +61,23 @@ describe('enforceJobDraft', () => {
         expect(res.warnings.some(w => w.includes('Clamped') || w.includes('clamped'))).toBe(true);
     });
 
+    it('does not clamp repeat when max_repeat=0 (unlimited)', () => {
+        const a = access({
+            create_job_constraints: { max_repeat: 0 },
+        });
+
+        const draft: JobDraft = {
+            repeat: 10,
+            steps: [{ command: 'get_tags', params: {} }],
+        };
+
+        const res = enforceJobDraft(a, draft);
+        expect(res.ok).toBe(true);
+        if (!res.ok) throw new Error('expected ok');
+        expect(res.job.repeat).toBe(10);
+        expect(res.warnings.length).toBe(0);
+    });
+
     it('blocks when steps exceed max_steps', () => {
         const a = access({
             create_job_constraints: { max_steps: 1 },
@@ -78,6 +95,23 @@ describe('enforceJobDraft', () => {
         expect(res.ok).toBe(false);
         if (res.ok) throw new Error('expected blocked');
         expect(res.error).toContain('limits job steps');
+    });
+
+    it('does not block when max_steps=0 (unlimited)', () => {
+        const a = access({
+            create_job_constraints: { max_steps: 0 },
+        });
+
+        const draft: JobDraft = {
+            repeat: 1,
+            steps: [
+                { command: 'get_tags', params: {} },
+                { command: 'read_ndef', params: {} },
+            ],
+        };
+
+        const res = enforceJobDraft(a, draft);
+        expect(res.ok).toBe(true);
     });
 
     it('blocks when a command is not in allowed_command_scopes', () => {

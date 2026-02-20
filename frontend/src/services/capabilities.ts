@@ -1,4 +1,8 @@
-import type { LicenseAccessResource } from 'nfc-jsclient/dist/models/license';
+import type {
+    CreateJobConstraintsResource,
+    CreateJobRateLimitResource,
+    JobCapabilitiesResource,
+} from 'nfc-jsclient/dist/models/license';
 
 export type JobDraft = {
     repeat: number;
@@ -9,10 +13,28 @@ export type EnforcementResult =
     | { ok: true; job: JobDraft; warnings: string[] }
     | { ok: false; error: string };
 
+export type AccessLike = {
+    allowed_scopes?: string[];
+    allowed_command_scopes?: string[];
+    create_job_rate_limit?: CreateJobRateLimitResource | null;
+    job_capabilities?: JobCapabilitiesResource | null;
+    create_job_constraints?: CreateJobConstraintsResource | null;
+};
+
 function numOrNull(v: number | null | undefined): number | null {
     if (v === null || v === undefined) return null;
     if (Number.isFinite(v)) return v;
     return null;
+}
+
+function positiveLimitOrNull(v: number | null | undefined): number | null {
+    const n = numOrNull(v);
+    if (n === null) return null;
+
+    // Backend semantics: limits are enforced only when > 0.
+    // 0 (or negative) means "unlimited".
+    if (n <= 0) return null;
+    return n;
 }
 
 function isAllowedByScope(allowedScopes: string[], command: string): boolean {
@@ -41,7 +63,7 @@ function isAllowedByScope(allowedScopes: string[], command: string): boolean {
     return false;
 }
 
-export function enforceJobDraft(access: LicenseAccessResource | null | undefined, draft: JobDraft): EnforcementResult {
+export function enforceJobDraft(access: AccessLike | null | undefined, draft: JobDraft): EnforcementResult {
     const warnings: string[] = [];
     const job: JobDraft = {
         repeat: Math.max(0, Math.trunc(draft.repeat ?? 0)),
@@ -63,13 +85,13 @@ export function enforceJobDraft(access: LicenseAccessResource | null | undefined
         warnings.push('Repeat is not allowed on this host license. Set to 1.');
     }
 
-    const maxRepeat = numOrNull(constraints?.max_repeat);
+    const maxRepeat = positiveLimitOrNull(constraints?.max_repeat);
     if (maxRepeat !== null && job.repeat > maxRepeat) {
         job.repeat = maxRepeat;
         warnings.push(`Repeat is limited by license. Clamped to ${maxRepeat}.`);
     }
 
-    const maxSteps = numOrNull(constraints?.max_steps);
+    const maxSteps = positiveLimitOrNull(constraints?.max_steps);
     if (maxSteps !== null && job.steps.length > maxSteps) {
         // safest behavior is to block rather than silently drop commands
         return {

@@ -38,10 +38,21 @@
     "clear": "Очистить",
     "load": "Загрузить",
     "jobSubmitted": "Job отправлен.",
+    "close": "Закрыть",
     "yes": "да",
     "no": "нет",
     "cancel": "Отмена",
     "noData": "Нет данных"
+  },
+  "jobModal": {
+    "pending": "Ожидание тега",
+    "activated": "Выполнение операции над тегом",
+    "finished": "Успешное выполнение",
+    "deleted": "Задание было удалено",
+    "error": "Ошибка: {errorMessage}",
+    "scheduled": "Запланировано",
+    "success": "Успех",
+    "failed": "Ошибка"
   },
   "console": {
     "title": "Консоль",

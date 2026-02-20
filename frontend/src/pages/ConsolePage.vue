@@ -22,6 +22,7 @@ import { useLicenseStore } from '../stores/license';
 import { useRunsStore } from '../stores/runs';
 import { useWsStore } from '../stores/ws';
 import { useSnippetsStore } from '../stores/snippets';
+import { useJobModalStore } from '../stores/jobModal';
 import { type JobDraft } from '../services/capabilities';
 import { base64ToAscii, base64ToHex, hexToBase64 } from '../utils/encoding';
 
@@ -36,6 +37,7 @@ const license = useLicenseStore();
 const ws = useWsStore();
 const runs = useRunsStore();
 const snippets = useSnippetsStore();
+const jobModal = useJobModalStore();
 
 const commandsText = ref('');
 const results = ref<string[]>([]);
@@ -185,6 +187,11 @@ async function send() {
         }
         lastJobId.value = res.jobId;
         message.success(t('common.jobSubmitted'));
+        jobModal.openForJob({
+            adapterId: adapters.selectedAdapterId,
+            jobId: res.jobId,
+            jobName: `console_${targetEntity.value}`,
+        });
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {
