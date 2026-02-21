@@ -89,12 +89,14 @@
     "pageTitle": "Read tag",
     "pageDesc": "Read NDEF message and tag information.",
     "read": "Read",
-    "recordsView": "Records view",
+    "recordsView": "View",
     "tags": "Tags",
     "ndef": "NDEF",
     "noNdef": "No NDEF data.",
-    "readonly": "Read-only",
-    "compact": "Compact",
+    "access": "Access",
+    "accessReadOnly": "Read-only",
+    "accessReadWrite": "Read & write",
+    "compact": "Text",
     "json": "JSON",
     "tagId": "Tag ID",
     "uid": "UID",
@@ -102,7 +104,8 @@
     "vendor": "Vendor",
     "product": "Model",
     "tech": "Tech",
-    "record": "Record"
+    "record": "Record",
+    "content": "Content"
   },
   "write": {
     "title": "Write",
@@ -146,5 +149,89 @@
     "formatDesc": "Format tag to default state.",
     "format": "Format",
     "lastRun": "Last run"
+  },
+  "recordModals": {
+    "text": {
+      "modal_title": "Plain text",
+      "text": "Text",
+      "lang": "Language"
+    },
+    "url": {
+      "modal_title": "URL",
+      "url": "URL"
+    },
+    "uri": {
+      "modal_title": "URI",
+      "uri": "URI"
+    },
+    "phone": {
+      "modal_title": "Phone",
+      "phone_number": "Phone"
+    },
+    "geo": {
+      "modal_title": "Geo",
+      "latitude": "Latitude",
+      "longitude": "Longitude"
+    },
+    "aar": {
+      "modal_title": "Android app",
+      "package_name": "Package"
+    },
+    "poster": {
+      "modal_title": "Smart poster",
+      "title": "Title",
+      "uri": "URI"
+    },
+    "mime": {
+      "modal_title": "MIME",
+      "type": "Type",
+      "format": "Format",
+      "content": "Content"
+    },
+    "raw": {
+      "modal_title": "Raw",
+      "tnf": "TNF",
+      "type": "Type",
+      "id": "ID",
+      "payload": "Payload"
+    },
+    "vcard": {
+      "modal_title": "vCard",
+      "first_name": "First name",
+      "last_name": "Last name",
+      "organization": "Organization",
+      "title": "Title",
+      "email": "Email",
+      "phone_home": "Phone (home)",
+      "phone_work": "Phone (work)",
+      "phone_cell": "Phone (cell)",
+      "site": "Website",
+      "address_country": "Country",
+      "address_postal_code": "Postal code",
+      "address_region": "Region",
+      "address_city": "City",
+      "address_street": "Street"
+    }
+  },
+  "languages": {
+    "arabic": "Arabic",
+    "bengali": "Bengali",
+    "chinese": "Chinese",
+    "danish": "Danish",
+    "dutch": "Dutch",
+    "english": "English",
+    "finnish": "Finnish",
+    "french": "French",
+    "german": "German",
+    "greek": "Greek",
+    "hebrew": "Hebrew",
+    "hindi": "Hindi",
+    "irish": "Irish",
+    "italian": "Italian",
+    "japanese": "Japanese",
+    "latin": "Latin",
+    "portuguese": "Portuguese",
+    "russian": "Russian",
+    "spanish": "Spanish"
   }
 }

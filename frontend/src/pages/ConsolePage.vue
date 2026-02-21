@@ -24,7 +24,7 @@ import { useWsStore } from '../stores/ws';
 import { useSnippetsStore } from '../stores/snippets';
 import { useJobModalStore } from '../stores/jobModal';
 import { type JobDraft } from '../services/capabilities';
-import { base64ToAscii, base64ToHex, hexToBase64 } from '../utils/encoding';
+import { hexToAscii } from '../utils/encoding';
 
 import { CommandStatus } from 'nfc-jsclient/dist/models/commands';
 import type { JobStepResource } from 'nfc-jsclient/dist/models/jobs';
@@ -116,10 +116,6 @@ async function onInsertSnippet(code: string) {
     }
 }
 
-function formatRx(base64: string): string {
-    return outputFormat.value === 'ascii' ? base64ToAscii(base64) : base64ToHex(base64);
-}
-
 function buildStepsFromText(text: string): JobStepResource[] {
     const lines = text.split(/\r?\n/);
     const steps: JobStepResource[] = [];
@@ -131,11 +127,10 @@ function buildStepsFromText(text: string): JobStepResource[] {
         if (!trimmed) continue;
         if (trimmed.startsWith('#')) continue;
 
-        const txBase64 = hexToBase64(trimmed);
         steps.push({
             command: cmd as any,
             params: {
-                tx_bytes: txBase64,
+                tx_bytes: trimmed,
             } as any,
         } as any);
     }
@@ -213,12 +208,16 @@ function onRunEvent(run: JobRun) {
                 : r.status === CommandStatus.Error
                   ? t('console.statusError', { message: r.message ?? '' })
                   : t('console.statusUnknown');
-        const tx = (r.params as any)?.tx_bytes ? base64ToHex((r.params as any).tx_bytes) : '';
-        const rx = (r.output as any)?.rx_bytes ? formatRx((r.output as any).rx_bytes) : '';
+        // nfc-jsclient normalizes tx_bytes/rx_bytes to HEX strings in StepResult
+        const txHex = (r.params as any)?.tx_bytes as string | undefined;
+        const rxHex = (r.output as any)?.rx_bytes as string | undefined;
 
-        if (tx) outputLines.push(`> ${tx}`);
+        if (txHex) outputLines.push(`> ${txHex}`);
         outputLines.push(statusStr);
-        if (rx) outputLines.push(`< ${rx}`);
+        if (rxHex) {
+            const rendered = outputFormat.value === 'ascii' ? hexToAscii(rxHex) : rxHex;
+            outputLines.push(`< ${rendered}`);
+        }
         outputLines.push('');
     }
 
@@ -240,9 +239,9 @@ watch(
 </script>
 
 <template>
-    <n-flex vertical size="large">
-        <n-card :bordered="false" content-style="padding: 24px;">
-            <n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
+	<n-flex vertical size="large">
+		<n-card :bordered="false" content-style="padding: 24px;">
+			<n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
                 <n-icon size="40">
                     <TerminalOutline />
                 </n-icon>
@@ -260,7 +259,7 @@ watch(
                 >
                     {{ t('console.send') }}
                 </n-button>
-            </n-flex>
+			</n-flex>
 
             <n-flex :wrap="true" style="gap: 24px">
                 <div style="flex: 1; min-width: 320px">

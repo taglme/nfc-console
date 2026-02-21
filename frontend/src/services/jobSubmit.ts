@@ -46,24 +46,31 @@ export async function submitJob(params: {
     // Without it, the server may respond 401/403 and the browser may surface it as a generic "Network error".
     const app = useAppStore();
     await app.loadEmbeddedAppKey();
+    await app.loadDevFlags();
 
-    const enforced = enforceJobDraft(params.access, params.draft);
+    // Dev escape hatch: ignore host license constraints on the client side.
+    // This does NOT bypass server-side checks; pair with nfcd insecure mode if needed.
+    const effectiveAccess = app.ignoreHostLicense ? null : params.access;
+
+    const enforced = enforceJobDraft(effectiveAccess, params.draft);
     if (!enforced.ok) {
         return { ok: false, error: enforced.error };
     }
     enforced.warnings.forEach(w => params.onWarning?.(w));
 
     const rateLimit = useRateLimitStore();
-    const rateCheck = rateLimit.check(params.access?.create_job_rate_limit ?? undefined);
-    if (!rateCheck.ok) {
-        const seconds = Math.ceil(rateCheck.waitMs / 1000);
-        return {
-            ok: false,
-            error: 'rate_limit',
-            errorKey: 'errors.rateLimit',
-            errorParams: { seconds },
-        };
-    }
+	if (!app.ignoreHostLicense) {
+		const rateCheck = rateLimit.check(params.access?.create_job_rate_limit ?? undefined);
+		if (!rateCheck.ok) {
+			const seconds = Math.ceil(rateCheck.waitMs / 1000);
+			return {
+				ok: false,
+				error: 'rate_limit',
+				errorKey: 'errors.rateLimit',
+				errorParams: { seconds },
+			};
+		}
+	}
 
     const job: NewJob = {
         job_name: params.jobName,
@@ -83,7 +90,9 @@ export async function submitJob(params: {
     const created = await sdk.Jobs.add(params.adapterId, job);
 
     // record only after successful submission
-    rateLimit.record();
+    if (!app.ignoreHostLicense) {
+        rateLimit.record();
+    }
 
     return { ok: true, jobId: created.jobID };
 }

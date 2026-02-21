@@ -6,6 +6,10 @@ export function GetEmbeddedAppKey() {
   return window['go']['main']['App']['GetEmbeddedAppKey']();
 }
 
+export function GetIgnoreHostLicense() {
+  return window['go']['main']['App']['GetIgnoreHostLicense']();
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }

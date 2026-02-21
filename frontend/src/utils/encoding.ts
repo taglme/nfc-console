@@ -55,3 +55,12 @@ export function base64ToHex(base64: string): string {
 export function base64ToAscii(base64: string): string {
     return atob(base64);
 }
+
+export function hexToAscii(hex: string): string {
+    const bytes = hexToBytes(hex);
+    let out = '';
+    for (const b of bytes) {
+        out += String.fromCharCode(b);
+    }
+    return out;
+}

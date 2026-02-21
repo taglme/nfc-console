@@ -250,6 +250,7 @@ const wsIndicatorText = computed(() => {
 onMounted(async () => {
   startWsBridge();
   await app.loadEmbeddedAppKey();
+  await app.loadDevFlags();
 
   locale.value = settings.locale;
 
@@ -319,7 +320,7 @@ onMounted(async () => {
         <n-layout content-style="display: flex; flex-direction: column; height: 100%;">
           
           <!-- Header -->
-          <n-layout-header bordered style="height: 64px; padding: 0 24px;">
+          <n-layout-header bordered style="height: 64px; padding: 0 24px; flex-shrink: 0;">
              <n-flex align="center" justify="space-between" style="height: 100%;">
                 
                 <!-- Center / Search / Adapters -->
@@ -372,6 +373,7 @@ onMounted(async () => {
           <n-layout-content
               :content-style="{ padding: '24px', paddingBottom: '32px', backgroundColor: settings.theme === 'dark' ? '#101014' : '#f5f7fa', minHeight: '100%' }"
               :native-scrollbar="false"
+              style="flex: 1; overflow: hidden;"
           >
             <div style="max-width: 1200px; margin: 0 auto; width: 100%;">
                 <router-view />

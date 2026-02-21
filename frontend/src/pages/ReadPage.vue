@@ -6,16 +6,26 @@ import {
     NDescriptions,
     NDescriptionsItem,
     NFlex,
-    NList,
-    NListItem,
     NModal,
     NSelect,
+    NTable,
     NText,
     NIcon,
     useMessage,
 } from 'naive-ui';
 import { useI18n } from 'vue-i18n';
-import { SearchOutline } from '@vicons/ionicons5';
+import {
+    SearchOutline,
+    LinkOutline,
+    DocumentTextOutline,
+    CallOutline,
+    LocationOutline,
+    LogoAndroid,
+    PersonOutline,
+    DocumentAttachOutline,
+    CodeSlashOutline,
+    ImageOutline,
+} from '@vicons/ionicons5';
 
 import { submitJob } from '../services/jobSubmit';
 import { useAdaptersStore } from '../stores/adapters';
@@ -140,19 +150,185 @@ function recordLabel(r: NdefRecordResource): string {
             return `${r.type}`;
     }
 }
+
+type RecordField = { value: string; label: string };
+
+function recordIcon(type: string) {
+    switch (type) {
+        case 'url':
+        case 'uri':
+            return LinkOutline;
+        case 'text':
+            return DocumentTextOutline;
+        case 'phone':
+            return CallOutline;
+        case 'geo':
+            return LocationOutline;
+        case 'aar':
+            return LogoAndroid;
+        case 'vcard':
+            return PersonOutline;
+        case 'mime':
+            return DocumentAttachOutline;
+        case 'raw':
+            return CodeSlashOutline;
+        case 'poster':
+            return ImageOutline;
+        default:
+            return DocumentAttachOutline;
+    }
+}
+
+function recordTitle(r: NdefRecordResource | null): string {
+    if (!r) return '';
+    const k = String(r.type || '').toLowerCase();
+    const key = `recordModals.${k}.modal_title`;
+    const translated = t(key);
+    // vue-i18n returns key when missing
+    if (translated === key) return k;
+    return translated;
+}
+
+function langLabel(lang: unknown): string {
+    const raw = String(lang ?? '').trim();
+    if (!raw) return '–';
+    const key = `languages.${raw.toLowerCase()}`;
+    const translated = t(key);
+    if (translated === key) return raw;
+    return translated;
+}
+
+function fieldLabel(recordType: string, fieldKey: string): string {
+    const type = String(recordType || '').toLowerCase();
+    const key = `recordModals.${type}.${fieldKey}`;
+    const translated = t(key);
+    if (translated === key) return fieldKey;
+    return translated;
+}
+
+function recordFields(r: NdefRecordResource | null): RecordField[] {
+    if (!r) return [];
+
+    const type = String(r.type || '').toLowerCase();
+    const data: any = (r as any).data ?? {};
+
+    switch (type) {
+        case 'text':
+            return [
+                { value: String(data.text ?? '–'), label: fieldLabel(type, 'text') },
+                { value: langLabel(data.lang), label: fieldLabel(type, 'lang') },
+            ];
+        case 'url':
+            return [{ value: String(data.url ?? '–'), label: fieldLabel(type, 'url') }];
+        case 'uri':
+            return [{ value: String(data.uri ?? '–'), label: fieldLabel(type, 'uri') }];
+        case 'phone':
+            return [{ value: String(data.phone_number ?? '–'), label: fieldLabel(type, 'phone_number') }];
+        case 'geo':
+            return [
+                { value: String(data.latitude ?? '–'), label: fieldLabel(type, 'latitude') },
+                { value: String(data.longitude ?? '–'), label: fieldLabel(type, 'longitude') },
+            ];
+        case 'aar':
+            return [{ value: String(data.package_name ?? '–'), label: fieldLabel(type, 'package_name') }];
+        case 'poster':
+            return [
+                { value: String(data.title ?? '–'), label: fieldLabel(type, 'title') },
+                { value: String(data.uri ?? '–'), label: fieldLabel(type, 'uri') },
+            ];
+        case 'mime': {
+            const content = data.format === 'ascii' ? String(data.content ?? '') : (data.content ? base64ToHex(String(data.content)) : '');
+            return [
+                { value: String(data.type ?? '–'), label: fieldLabel(type, 'type') },
+                { value: String(data.format ?? '–'), label: fieldLabel(type, 'format') },
+                { value: content || '–', label: fieldLabel(type, 'content') },
+            ];
+        }
+        case 'raw':
+            return [
+                { value: String(data.tnf ?? '–'), label: fieldLabel(type, 'tnf') },
+                { value: String(data.type ?? '–'), label: fieldLabel(type, 'type') },
+                { value: String(data.id ?? '–'), label: fieldLabel(type, 'id') },
+                { value: data.payload ? base64ToHex(String(data.payload)) : '–', label: fieldLabel(type, 'payload') },
+            ];
+        case 'vcard': {
+            const keys = [
+                'first_name',
+                'last_name',
+                'organization',
+                'title',
+                'email',
+                'phone_home',
+                'phone_work',
+                'phone_cell',
+                'site',
+                'address_country',
+                'address_postal_code',
+                'address_region',
+                'address_city',
+                'address_street',
+            ];
+            return keys.map(k => ({ value: String(data[k] ?? '–'), label: fieldLabel(type, k) }));
+        }
+        default:
+            return Object.keys(data).map(k => ({ value: String(data[k] ?? '–'), label: fieldLabel(type, k) }));
+    }
+}
+
+function recordCompactParts(r: NdefRecordResource): string[] {
+    const type = String(r.type || '').toLowerCase();
+    const data: any = (r as any).data ?? {};
+    switch (type) {
+        case 'url':
+            return [String(data.url ?? '')].filter(Boolean);
+        case 'uri':
+            return [String(data.uri ?? '')].filter(Boolean);
+        case 'text':
+            return [String(data.text ?? '')].filter(Boolean);
+        case 'phone':
+            return [String(data.phone_number ?? '')].filter(Boolean);
+        case 'geo':
+            return [
+                [data.latitude, data.longitude].filter(Boolean).join(', '),
+            ].filter(Boolean);
+        case 'aar':
+            return [String(data.package_name ?? '')].filter(Boolean);
+        case 'poster':
+            return [String(data.title ?? ''), String(data.uri ?? '')].filter(Boolean);
+        case 'mime':
+            return [String(data.type ?? ''), String(data.format ?? '')].filter(Boolean);
+        case 'raw':
+            return [String(data.type ?? ''), String(data.id ?? '')].filter(Boolean);
+        case 'vcard':
+            return [
+                [data.first_name, data.last_name].filter(Boolean).join(' '),
+                String(data.email ?? ''),
+            ].filter(Boolean);
+        default:
+            return [type];
+    }
+}
 </script>
 
 <template>
     <n-flex vertical size="large">
         <n-card :bordered="false" content-style="padding: 24px;">
-            <n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
-                <n-icon size="40">
-                    <SearchOutline />
-                </n-icon>
-                <div style="flex: 1">
-                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('read.pageTitle') }}</div>
-                    <n-text depth="3">{{ t('read.pageDesc') }}</n-text>
-                </div>
+            <n-flex
+                align="center"
+                justify="space-between"
+                :wrap="false"
+                style="gap: 16px; margin-bottom: 24px; height: 88px;"
+            >
+                <n-flex align="center" :wrap="false" style="gap: 24px; min-width: 0; flex: 1;">
+                    <n-icon size="40">
+                        <SearchOutline />
+                    </n-icon>
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('read.pageTitle') }}</div>
+                        <n-text depth="3">{{ t('read.pageDesc') }}</n-text>
+                    </div>
+                </n-flex>
+
                 <!-- Action -->
                 <n-button
                     type="primary"
@@ -165,16 +341,8 @@ function recordLabel(r: NdefRecordResource): string {
                 </n-button>
             </n-flex>
 
-            <n-flex align="center" justify="end" :wrap="true" style="margin-bottom: 12px;">
-
-                <n-flex align="center" :wrap="false" style="gap: 8px">
-                    <n-text depth="3">{{ t('read.recordsView') }}:</n-text>
-                    <n-select v-model:value="outputMode" :options="recordOptions" style="width: 140px" />
-                </n-flex>
-            </n-flex>
-
             <div style="margin-bottom: 16px;">
-                <n-text depth="3">{{ t('read.tags') }}</n-text>
+                <n-text strong style="font-size: 14px;">{{ t('read.tags') }}</n-text>
                 <div v-if="!tags.length" style="margin-top: 8px;">
                     <n-text depth="3">{{ t('common.noData') }}</n-text>
                 </div>
@@ -204,18 +372,89 @@ function recordLabel(r: NdefRecordResource): string {
             </div>
 
             <div v-if="ndef">
-                <n-text depth="3">{{ t('read.ndef') }}</n-text>
-                <n-text depth="3">{{ t('read.readonly') }}: {{ ndef.read_only ? t('common.yes') : t('common.no') }}</n-text>
-                <n-list bordered>
-                    <n-list-item v-for="(r, idx) in recordList" :key="idx" @click="openRecord(r)">
-                        {{ idx + 1 }}. {{ recordLabel(r) }}
-                    </n-list-item>
-                </n-list>
+                <n-flex vertical size="small" style="margin-top: 12px;">
+                    <n-flex align="center" justify="space-between" :wrap="true" style="gap: 12px;">
+                        <n-text strong style="font-size: 14px;">{{ t('read.ndef') }}</n-text>
+
+                        <n-flex align="center" :wrap="false" style="gap: 8px">
+                            <n-text depth="3">{{ t('read.recordsView') }}:</n-text>
+                            <n-select v-model:value="outputMode" :options="recordOptions" style="width: 140px" />
+                        </n-flex>
+                    </n-flex>
+
+                    <n-text depth="3">
+                        {{ t('read.access') }}:
+                        {{ ndef.read_only ? t('read.accessReadOnly') : t('read.accessReadWrite') }}
+                    </n-text>
+
+                    <n-table :bordered="true" :single-line="false" size="small">
+                        <thead>
+                            <tr>
+                                <th style="width: 90px;">#</th>
+                                <th>{{ t('read.content') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="(r, idx) in recordList"
+                                :key="idx"
+                                @click="openRecord(r)"
+                                style="cursor: pointer;"
+                            >
+                                <td style="white-space: nowrap;">{{ idx + 1 }}</td>
+                                <td>
+                                    <template v-if="outputMode === 'json'">
+                                        <pre style="white-space: pre-wrap; margin: 0">{{ JSON.stringify(r, null, 2) }}</pre>
+                                    </template>
+                                    <template v-else>
+                                        <n-flex align="center" :wrap="false" style="gap: 10px">
+                                            <n-icon size="18">
+                                                <component :is="recordIcon(r.type)" />
+                                            </n-icon>
+                                            <n-text style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                {{ recordCompactParts(r).join(', ') || r.type }}
+                                            </n-text>
+                                        </n-flex>
+                                    </template>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </n-table>
+                </n-flex>
             </div>
         </n-card>
 
-        <n-modal v-model:show="recordModalOpen" preset="card" :title="t('read.record')" style="width: 640px">
-            <pre style="white-space: pre-wrap; margin: 0">{{ selectedRecord ? JSON.stringify(selectedRecord, null, 2) : '' }}</pre>
+        <n-modal
+            v-model:show="recordModalOpen"
+            preset="card"
+            style="width: 460px; max-width: calc(100vw - 48px);"
+        >
+            <template #header>
+                <n-flex align="center" :wrap="false" style="gap: 12px">
+                    <n-icon size="26">
+                        <component :is="recordIcon(selectedRecord?.type || '')" />
+                    </n-icon>
+                    <div style="font-weight: 600; font-size: 16px;">{{ recordTitle(selectedRecord) }}</div>
+                </n-flex>
+            </template>
+
+            <template v-if="outputMode === 'json'">
+                <pre style="white-space: pre-wrap; margin: 0">{{ selectedRecord ? JSON.stringify(selectedRecord, null, 2) : '' }}</pre>
+            </template>
+            <template v-else>
+                <div v-for="(f, i) in recordFields(selectedRecord)" :key="i" style="margin-bottom: 18px;">
+                    <div style="white-space: pre-wrap; word-break: break-word;">
+                        {{ f.value }}
+                    </div>
+                    <n-text depth="3" style="display: block; margin-top: 2px; font-size: 12px;">
+                        {{ f.label }}
+                    </n-text>
+                </div>
+
+                <n-flex justify="end">
+                    <n-button text @click="recordModalOpen = false">{{ t('common.close') }}</n-button>
+                </n-flex>
+            </template>
         </n-modal>
     </n-flex>
 </template>

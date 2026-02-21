@@ -89,12 +89,14 @@
     "pageTitle": "Чтение метки",
     "pageDesc": "Чтение NDEF сообщения и информации о метке.",
     "read": "Прочитать",
-    "recordsView": "Вид записей",
+    "recordsView": "Вид",
     "tags": "Теги",
     "ndef": "NDEF",
     "noNdef": "Нет NDEF данных.",
-    "readonly": "Только чтение",
-    "compact": "Коротко",
+    "access": "Доступ",
+    "accessReadOnly": "Только чтение",
+    "accessReadWrite": "Чтение и запись",
+    "compact": "Текст",
     "json": "JSON",
     "tagId": "ID метки",
     "uid": "UID",
@@ -102,7 +104,8 @@
     "vendor": "Vendor",
     "product": "Model",
     "tech": "Технология",
-    "record": "Запись"
+    "record": "Запись",
+    "content": "Содержимое"
   },
   "write": {
     "title": "Write",
@@ -146,5 +149,89 @@
     "formatDesc": "Сбросить тег в состояние по умолчанию.",
     "format": "Форматировать",
     "lastRun": "Последний запуск"
+  },
+  "recordModals": {
+    "text": {
+      "modal_title": "Простой текст",
+      "text": "Текст",
+      "lang": "Язык"
+    },
+    "url": {
+      "modal_title": "URL",
+      "url": "URL"
+    },
+    "uri": {
+      "modal_title": "URI",
+      "uri": "URI"
+    },
+    "phone": {
+      "modal_title": "Телефон",
+      "phone_number": "Телефон"
+    },
+    "geo": {
+      "modal_title": "Гео",
+      "latitude": "Широта",
+      "longitude": "Долгота"
+    },
+    "aar": {
+      "modal_title": "Android приложение",
+      "package_name": "Пакет"
+    },
+    "poster": {
+      "modal_title": "Smart poster",
+      "title": "Заголовок",
+      "uri": "URI"
+    },
+    "mime": {
+      "modal_title": "MIME",
+      "type": "Тип",
+      "format": "Формат",
+      "content": "Содержимое"
+    },
+    "raw": {
+      "modal_title": "Raw",
+      "tnf": "TNF",
+      "type": "Тип",
+      "id": "ID",
+      "payload": "Payload"
+    },
+    "vcard": {
+      "modal_title": "vCard",
+      "first_name": "Имя",
+      "last_name": "Фамилия",
+      "organization": "Организация",
+      "title": "Должность",
+      "email": "Email",
+      "phone_home": "Телефон (дом)",
+      "phone_work": "Телефон (работа)",
+      "phone_cell": "Телефон (моб)",
+      "site": "Сайт",
+      "address_country": "Страна",
+      "address_postal_code": "Индекс",
+      "address_region": "Регион",
+      "address_city": "Город",
+      "address_street": "Улица"
+    }
+  },
+  "languages": {
+    "arabic": "Арабский",
+    "bengali": "Бенгальский",
+    "chinese": "Китайский",
+    "danish": "Датский",
+    "dutch": "Нидерландский",
+    "english": "Английский",
+    "finnish": "Финский",
+    "french": "Французский",
+    "german": "Немецкий",
+    "greek": "Греческий",
+    "hebrew": "Иврит",
+    "hindi": "Хинди",
+    "irish": "Ирландский",
+    "italian": "Итальянский",
+    "japanese": "Японский",
+    "latin": "Латинский",
+    "portuguese": "Португальский",
+    "russian": "Русский",
+    "spanish": "Испанский"
   }
 }

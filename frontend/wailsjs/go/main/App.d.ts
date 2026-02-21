@@ -3,4 +3,6 @@
 
 export function GetEmbeddedAppKey():Promise<string>;
 
+export function GetIgnoreHostLicense():Promise<boolean>;
+
 export function Greet(arg1:string):Promise<string>;

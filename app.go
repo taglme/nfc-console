@@ -12,6 +12,16 @@ type App struct {
 	ctx context.Context
 }
 
+func envBool(name string) bool {
+	v := strings.ToLower(strings.TrimSpace(os.Getenv(name)))
+	switch v {
+	case "1", "true", "yes", "y", "on":
+		return true
+	default:
+		return false
+	}
+}
+
 // NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{}
@@ -33,6 +43,15 @@ func (a *App) GetEmbeddedAppKey() string {
 		return v
 	}
 	return strings.TrimSpace(EmbeddedAppKey)
+}
+
+// GetIgnoreHostLicense returns true when the app should ignore host license constraints.
+// This is intended for local development (typically together with nfcd insecure mode).
+// Env vars:
+// - NFC_CONSOLE_IGNORE_HOST_LICENSE
+// - TAGLME_NFC_CONSOLE_IGNORE_HOST_LICENSE (alias)
+func (a *App) GetIgnoreHostLicense() bool {
+	return envBool("NFC_CONSOLE_IGNORE_HOST_LICENSE") || envBool("TAGLME_NFC_CONSOLE_IGNORE_HOST_LICENSE")
 }
 
 // Greet returns a greeting for the given name
