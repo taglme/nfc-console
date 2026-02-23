@@ -26,9 +26,10 @@ body {
     --ionicon-stroke-width: 22px;
 }
 
-/* Active menu item styling: blue left stripe, no background fill */
+/* Active menu item styling */
 .n-menu-item-content--selected {
-    background-color: transparent !important;
+    position: relative;
+    /* allow the background color from theme-overrides to apply */
 }
 
 .n-menu-item-content--selected::after {
@@ -38,8 +39,27 @@ body {
     top: 4px;
     bottom: 4px;
     width: 4px;
-    background-color: #0066cc;
+    background-color: var(--app-primary-color, #e66b3c);
     border-radius: 0 4px 4px 0;
     z-index: 10;
     pointer-events: none;
+}
+
+.win-btn {
+    width: 46px;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.win-btn:hover {
+    background-color: rgba(127, 127, 127, 0.2);
+}
+
+.win-close:hover {
+    background-color: #e81123 !important;
+    color: white !important;
 }

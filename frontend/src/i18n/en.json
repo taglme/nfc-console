@@ -20,7 +20,7 @@
   },
   "common": {
     "apply": "Apply",
-    "connectWs": "Connect WS",
+    "connectWs": "Connect",
     "disconnect": "Disconnect",
     "host": "Host",
     "ipAddress": "IP address",
@@ -42,7 +42,12 @@
     "yes": "yes",
     "no": "no",
     "cancel": "Cancel",
-    "noData": "No data"
+    "noData": "No data",
+    "appKey": "App key",
+    "statusOk": "ok",
+    "statusMissing": "missing",
+    "statusLoading": "loading",
+    "wsConnectRefused": "Connection refused or network error"
   },
   "jobModal": {
     "pending": "Waiting for tag",
@@ -154,49 +159,63 @@
     "text": {
       "modal_title": "Plain text",
       "text": "Text",
-      "lang": "Language"
+      "lang": "Language",
+      "placeholder": "Message"
     },
     "url": {
-      "modal_title": "URL",
-      "url": "URL"
+      "modal_title": "URL link",
+      "url": "URL",
+      "placeholder": "https://tagl.me"
     },
     "uri": {
-      "modal_title": "URI",
-      "uri": "URI"
+      "modal_title": "URI link",
+      "uri": "URI",
+      "placeholder": "wss://localhost:3000"
     },
     "phone": {
-      "modal_title": "Phone",
-      "phone_number": "Phone"
+      "modal_title": "Phone number",
+      "phone_number": "Phone",
+      "placeholder": "+1 234 567 89"
     },
     "geo": {
-      "modal_title": "Geo",
+      "modal_title": "Geo location",
       "latitude": "Latitude",
-      "longitude": "Longitude"
+      "longitude": "Longitude",
+      "lat_placeholder": "37.77",
+      "long_placeholder": "-122.41"
     },
     "aar": {
-      "modal_title": "Android app",
-      "package_name": "Package"
+      "modal_title": "Android package",
+      "package_name": "Package",
+      "placeholder": "com.example.app"
     },
     "poster": {
       "modal_title": "Smart poster",
       "title": "Title",
-      "uri": "URI"
+      "uri": "URI",
+      "title_placeholder": "Check out tagl.me!",
+      "uri_placeholder": "https://tagl.me"
     },
     "mime": {
-      "modal_title": "MIME",
+      "modal_title": "Mime type",
       "type": "Type",
       "format": "Format",
-      "content": "Content"
+      "content": "Content",
+      "type_placeholder": "text/plain",
+      "content_placeholder": "Information"
     },
     "raw": {
-      "modal_title": "Raw",
+      "modal_title": "Raw record",
       "tnf": "TNF",
       "type": "Type",
       "id": "ID",
-      "payload": "Payload"
+      "payload": "Payload",
+      "type_placeholder": "U",
+      "id_placeholder": "1",
+      "payload_placeholder": "02 FF 2C"
     },
     "vcard": {
-      "modal_title": "vCard",
+      "modal_title": "Business card",
       "first_name": "First name",
       "last_name": "Last name",
       "organization": "Organization",
@@ -210,7 +229,19 @@
       "address_postal_code": "Postal code",
       "address_region": "Region",
       "address_city": "City",
-      "address_street": "Street"
+      "address_street": "Street",
+      "first_name_placeholder": "John",
+      "last_name_placeholder": "Doe",
+      "organization_placeholder": "Taglme",
+      "title_placeholder": "Engineer",
+      "email_placeholder": "john@example.com",
+      "phone_placeholder": "+123456789",
+      "site_placeholder": "https://example.com",
+      "address_country_placeholder": "USA",
+      "address_postal_code_placeholder": "10001",
+      "address_region_placeholder": "NY",
+      "address_city_placeholder": "New York",
+      "address_street_placeholder": "Broadway"
     }
   },
   "languages": {
@@ -233,5 +264,19 @@
     "portuguese": "Portuguese",
     "russian": "Russian",
     "spanish": "Spanish"
+  },
+  "about": {
+    "hostInfo": "Host Info",
+    "name": "Host Name",
+    "version": "Host App Version",
+    "mid": "MID (Machine ID)",
+    "licenseId": "License ID",
+    "licenseStart": "License Start Date",
+    "licenseEnd": "License End Date",
+    "supportEnd": "Support End Date",
+    "plugins": "Available Plugins",
+    "type": "License Type",
+    "tier": "License Tier",
+    "licenseDetails": "License Details"
   }
 }

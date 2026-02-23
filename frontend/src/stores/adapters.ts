@@ -2,6 +2,8 @@ import { defineStore } from 'pinia';
 import type { Adapter } from 'nfc-jsclient/dist/client/adapters';
 
 import { getSdk } from '../services/sdk';
+import { useWsStore } from './ws';
+import { useAppStore } from './app';
 
 const LS_KEY = 'taglme.console.selectedAdapterId.v1';
 
@@ -29,6 +31,14 @@ export const useAdaptersStore = defineStore('adapters', {
             try {
                 const sdk = getSdk();
                 this.list = await sdk.Adapters.getAll();
+
+                // Server must be up since HTTP succeeded. Try reconnecting WS if disconnected.
+                const app = useAppStore();
+                const ws = useWsStore();
+                if (!ws.connected && !ws.connecting && app.embeddedAppKey.trim().length !== 0) {
+                    ws.connect();
+                }
+
                 if (this.selectedAdapterId && !this.list.some(a => a.adapterId === this.selectedAdapterId)) {
                     this.selectedAdapterId = '';
                     localStorage.removeItem(LS_KEY);

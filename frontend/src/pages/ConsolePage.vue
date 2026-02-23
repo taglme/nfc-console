@@ -52,9 +52,30 @@ const snippetsOpen = ref(false);
 const insertingSnippet = ref(false);
 
 const snippetKind = computed(() => (targetEntity.value === 'tag' ? 'tag' : 'adapter'));
-const snippetList = computed(() => (snippetKind.value === 'tag' ? snippets.tag : snippets.adapter));
+const snippetList = computed(() => {
+    let list = snippetKind.value === 'tag' ? snippets.tag : snippets.adapter;
 
-const canSend = computed(() => !sending.value && !!adapters.selectedAdapterId);
+    if (snippetKind.value === 'adapter' && adapters.selectedAdapter) {
+        const aName = adapters.selectedAdapter.name.toLowerCase();
+        
+        list = list.filter(s => {
+            // Если сниппет не привязан к конкретному адаптеру, оставляем его
+            if (!s.usageId && !s.usageName) return true;
+            
+            // Очищаем "U" и "U-J1" в конце (ACR122U -> acr122) для нечеткого сопоставления
+            const clean = (str: string) => str.toLowerCase().replace(/u(?:[^a-z0-9].*)?$/i, '').trim();
+            
+            const sId = clean(s.usageId || '');
+            const sName = clean(s.usageName || '');
+            
+            return (sId && aName.includes(sId)) || (sName && aName.includes(sName));
+        });
+    }
+
+    return list;
+});
+
+const canSend = computed(() => !sending.value && !!adapters.selectedAdapterId && ws.connected);
 
 const output = computed(() => results.value.join('\r\n'));
 
@@ -171,7 +192,7 @@ async function send() {
     try {
         const res = await submitJob({
             adapterId: adapters.selectedAdapterId,
-            jobName: `console_${targetEntity.value}`,
+            jobName: t('console.pageTitle'),
             draft,
             access: license.access,
             onWarning: w => message.warning(w),
@@ -185,7 +206,7 @@ async function send() {
         jobModal.openForJob({
             adapterId: adapters.selectedAdapterId,
             jobId: res.jobId,
-            jobName: `console_${targetEntity.value}`,
+            jobName: t('console.pageTitle'),
         });
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
@@ -268,11 +289,11 @@ watch(
                     </div>
                     
                     <n-flex :wrap="false" style="gap: 8px; margin-bottom: 12px;">
-                        <n-button @click="openSnippets">
-                            {{ t('console.addDropdown') }} <n-icon style="margin-left: 4px"><ChevronDownOutline /></n-icon>
+                        <n-button secondary @click="openSnippets">
+                            {{ t('console.addDropdown') }}
                         </n-button>
-                        <n-button @click="onLoadCommandsClick">{{ t('common.load') }}</n-button>
-                        <n-button @click="onSaveCommands">{{ t('common.save') }}</n-button>
+                        <n-button secondary @click="onLoadCommandsClick">{{ t('common.load') }}</n-button>
+                        <n-button secondary @click="onSaveCommands">{{ t('common.save') }}</n-button>
                     </n-flex>
 
                     <n-input
@@ -302,8 +323,8 @@ watch(
                     </div>
 
                     <n-flex :wrap="false" style="gap: 8px; margin-bottom: 12px;">
-                        <n-button :disabled="results.length === 0" @click="onSaveResults">{{ t('common.save') }}</n-button>
-                        <n-button :disabled="results.length === 0" @click="clearResults">{{ t('common.clear') }}</n-button>
+                        <n-button secondary :disabled="results.length === 0" @click="onSaveResults">{{ t('common.save') }}</n-button>
+                        <n-button secondary :disabled="results.length === 0" @click="clearResults">{{ t('common.clear') }}</n-button>
                     </n-flex>
 
                     <n-input
@@ -336,11 +357,13 @@ watch(
                 style="width: 720px"
             >
                 <n-flex vertical style="gap: 12px">
-                    <n-text v-if="snippets.error" type="error">{{ snippets.error }}</n-text>
+                    <n-text v-if="snippets.error" type="error">
+                        {{ snippets.error.includes('Network Error') || snippets.error.includes('fetch') ? t('common.wsConnectRefused') : snippets.error }}
+                    </n-text>
                     <n-text v-else-if="snippets.loading" depth="3">{{ t('console.loadingSnippets') }}</n-text>
                     <n-text v-else-if="snippetList.length === 0" depth="3">{{ t('console.noSnippets') }}</n-text>
-                    <n-list v-else bordered>
-                        <n-list-item v-for="s in snippetList" :key="s.name" @click="onInsertSnippet(s.code)">
+                    <n-list v-else :bordered="false" hoverable clickable style="background: transparent;">
+                        <n-list-item v-for="s in snippetList" :key="s.name" @click="onInsertSnippet(s.code)" style="padding: 10px 14px;">
                             <n-flex vertical style="gap: 4px">
                                 <n-text strong>{{ s.name }}</n-text>
                                 <n-text depth="3" v-if="s.description">{{ s.description }}</n-text>
@@ -348,10 +371,6 @@ watch(
                             </n-flex>
                         </n-list-item>
                     </n-list>
-
-                    <n-flex justify="end">
-                        <n-button :loading="insertingSnippet" @click="snippetsOpen = false">{{ t('common.cancel') }}</n-button>
-                    </n-flex>
                 </n-flex>
             </n-modal>
         </n-card>

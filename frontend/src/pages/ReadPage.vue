@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import {
     NButton,
     NCard,
-    NDescriptions,
-    NDescriptionsItem,
+    NTable,
+    NTag,
+    NText,
     NFlex,
     NModal,
     NSelect,
-    NTable,
-    NText,
     NIcon,
+    NEmpty,
     useMessage,
 } from 'naive-ui';
 import { useI18n } from 'vue-i18n';
@@ -32,8 +33,11 @@ import { useAdaptersStore } from '../stores/adapters';
 import { useLicenseStore } from '../stores/license';
 import { useRunsStore } from '../stores/runs';
 import { useJobModalStore } from '../stores/jobModal';
+import { useWsStore } from '../stores/ws';
+import { useSettingsStore } from '../stores/settings';
 import { type JobDraft } from '../services/capabilities';
 import { base64ToHex } from '../utils/encoding';
+import { useTransferStore } from '../stores/transfer';
 
 import { Command } from 'nfc-jsclient/dist/models/commands';
 import type { TagResource } from 'nfc-jsclient/dist/models/tags';
@@ -45,6 +49,12 @@ const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const runs = useRunsStore();
 const jobModal = useJobModalStore();
+const ws = useWsStore();
+const settings = useSettingsStore();
+const router = useRouter();
+const transfer = useTransferStore();
+
+const isDark = computed(() => settings.theme === 'dark');
 
 const sending = ref(false);
 const lastJobId = ref('');
@@ -60,7 +70,7 @@ const ndef = ref<NdefResource | null>(null);
 const recordModalOpen = ref(false);
 const selectedRecord = ref<NdefRecordResource | null>(null);
 
-const canRead = computed(() => !!adapters.selectedAdapterId && !sending.value);
+const canRead = computed(() => !!adapters.selectedAdapterId && !sending.value && ws.connected);
 
 watch(
     () => lastRun.value,
@@ -102,7 +112,7 @@ async function onRead() {
     try {
         const res = await submitJob({
             adapterId: adapters.selectedAdapterId,
-            jobName: 'read',
+            jobName: t('read.pageTitle'),
             draft,
             access: license.access,
             onWarning: w => message.warning(w),
@@ -113,7 +123,7 @@ async function onRead() {
         }
         lastJobId.value = res.jobId;
         message.success(t('common.jobSubmitted'));
-        jobModal.openForJob({ adapterId: adapters.selectedAdapterId, jobId: res.jobId, jobName: 'read' });
+        jobModal.openForJob({ adapterId: adapters.selectedAdapterId, jobId: res.jobId, jobName: t('read.pageTitle') });
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -212,67 +222,71 @@ function recordFields(r: NdefRecordResource | null): RecordField[] {
     const type = String(r.type || '').toLowerCase();
     const data: any = (r as any).data ?? {};
 
-    switch (type) {
-        case 'text':
-            return [
-                { value: String(data.text ?? '–'), label: fieldLabel(type, 'text') },
-                { value: langLabel(data.lang), label: fieldLabel(type, 'lang') },
-            ];
-        case 'url':
-            return [{ value: String(data.url ?? '–'), label: fieldLabel(type, 'url') }];
-        case 'uri':
-            return [{ value: String(data.uri ?? '–'), label: fieldLabel(type, 'uri') }];
-        case 'phone':
-            return [{ value: String(data.phone_number ?? '–'), label: fieldLabel(type, 'phone_number') }];
-        case 'geo':
-            return [
-                { value: String(data.latitude ?? '–'), label: fieldLabel(type, 'latitude') },
-                { value: String(data.longitude ?? '–'), label: fieldLabel(type, 'longitude') },
-            ];
-        case 'aar':
-            return [{ value: String(data.package_name ?? '–'), label: fieldLabel(type, 'package_name') }];
-        case 'poster':
-            return [
-                { value: String(data.title ?? '–'), label: fieldLabel(type, 'title') },
-                { value: String(data.uri ?? '–'), label: fieldLabel(type, 'uri') },
-            ];
-        case 'mime': {
-            const content = data.format === 'ascii' ? String(data.content ?? '') : (data.content ? base64ToHex(String(data.content)) : '');
-            return [
-                { value: String(data.type ?? '–'), label: fieldLabel(type, 'type') },
-                { value: String(data.format ?? '–'), label: fieldLabel(type, 'format') },
-                { value: content || '–', label: fieldLabel(type, 'content') },
-            ];
+    const getFields = (): RecordField[] => {
+        switch (type) {
+            case 'text':
+                return [
+                    { value: String(data.text ?? '–'), label: fieldLabel(type, 'text') },
+                    { value: langLabel(data.lang), label: fieldLabel(type, 'lang') },
+                ];
+            case 'url':
+                return [{ value: String(data.url ?? '–'), label: fieldLabel(type, 'url') }];
+            case 'uri':
+                return [{ value: String(data.uri ?? '–'), label: fieldLabel(type, 'uri') }];
+            case 'phone':
+                return [{ value: String(data.phone_number ?? '–'), label: fieldLabel(type, 'phone_number') }];
+            case 'geo':
+                return [
+                    { value: String(data.latitude ?? '–'), label: fieldLabel(type, 'latitude') },
+                    { value: String(data.longitude ?? '–'), label: fieldLabel(type, 'longitude') },
+                ];
+            case 'aar':
+                return [{ value: String(data.package_name ?? '–'), label: fieldLabel(type, 'package_name') }];
+            case 'poster':
+                return [
+                    { value: String(data.title ?? '–'), label: fieldLabel(type, 'title') },
+                    { value: String(data.uri ?? '–'), label: fieldLabel(type, 'uri') },
+                ];
+            case 'mime': {
+                const content = data.format === 'ascii' ? String(data.content ?? '') : (data.content ? base64ToHex(String(data.content)) : '');
+                return [
+                    { value: String(data.type ?? '–'), label: fieldLabel(type, 'type') },
+                    { value: String(data.format ?? '–'), label: fieldLabel(type, 'format') },
+                    { value: content || '–', label: fieldLabel(type, 'content') },
+                ];
+            }
+            case 'raw':
+                return [
+                    { value: String(data.tnf ?? '–'), label: fieldLabel(type, 'tnf') },
+                    { value: String(data.type ?? '–'), label: fieldLabel(type, 'type') },
+                    { value: String(data.id ?? '–'), label: fieldLabel(type, 'id') },
+                    { value: data.payload ? base64ToHex(String(data.payload)) : '–', label: fieldLabel(type, 'payload') },
+                ];
+            case 'vcard': {
+                const keys = [
+                    'first_name',
+                    'last_name',
+                    'organization',
+                    'title',
+                    'email',
+                    'phone_home',
+                    'phone_work',
+                    'phone_cell',
+                    'site',
+                    'address_country',
+                    'address_postal_code',
+                    'address_region',
+                    'address_city',
+                    'address_street',
+                ];
+                return keys.map(k => ({ value: String(data[k] ?? '–'), label: fieldLabel(type, k) }));
+            }
+            default:
+                return Object.keys(data).map(k => ({ value: String(data[k] ?? '–'), label: fieldLabel(type, k) }));
         }
-        case 'raw':
-            return [
-                { value: String(data.tnf ?? '–'), label: fieldLabel(type, 'tnf') },
-                { value: String(data.type ?? '–'), label: fieldLabel(type, 'type') },
-                { value: String(data.id ?? '–'), label: fieldLabel(type, 'id') },
-                { value: data.payload ? base64ToHex(String(data.payload)) : '–', label: fieldLabel(type, 'payload') },
-            ];
-        case 'vcard': {
-            const keys = [
-                'first_name',
-                'last_name',
-                'organization',
-                'title',
-                'email',
-                'phone_home',
-                'phone_work',
-                'phone_cell',
-                'site',
-                'address_country',
-                'address_postal_code',
-                'address_region',
-                'address_city',
-                'address_street',
-            ];
-            return keys.map(k => ({ value: String(data[k] ?? '–'), label: fieldLabel(type, k) }));
-        }
-        default:
-            return Object.keys(data).map(k => ({ value: String(data[k] ?? '–'), label: fieldLabel(type, k) }));
-    }
+    };
+    
+    return getFields().filter(f => f.value && f.value.trim() !== '' && f.value !== '–');
 }
 
 function recordCompactParts(r: NdefRecordResource): string[] {
@@ -308,6 +322,52 @@ function recordCompactParts(r: NdefRecordResource): string[] {
             return [type];
     }
 }
+
+function download(filename: string, content: string, mime: string) {
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function saveToFile() {
+    if (!ndef.value?.message) return;
+    
+    // Convert base64 to hex for raw payloads and mime hex before saving to be fully compatible with Write page
+    const records = JSON.parse(JSON.stringify(ndef.value.message));
+    for (const r of records) {
+        if (r.type === 'raw' && r.data?.payload) {
+            r.data.payload = base64ToHex(r.data.payload);
+        }
+        if (r.type === 'mime' && r.data?.format === 'hex' && r.data?.content) {
+            r.data.content = base64ToHex(r.data.content);
+        }
+    }
+    
+    download('records.nfc', JSON.stringify(records, null, 2), 'application/json;charset=utf-8');
+}
+
+function navigateToWrite() {
+    if (!ndef.value?.message) return;
+    
+    // Convert base64 to hex for raw payloads and mime hex to be compatible with Write page
+    const records = JSON.parse(JSON.stringify(ndef.value.message));
+    for (const r of records) {
+        if (r.type === 'raw' && r.data?.payload) {
+            r.data.payload = base64ToHex(r.data.payload);
+        }
+        if (r.type === 'mime' && r.data?.format === 'hex' && r.data?.content) {
+            r.data.content = base64ToHex(r.data.content);
+        }
+        r._id = Math.random().toString(36).substring(2, 9);
+    }
+    
+    transfer.ndefRecords = records;
+    router.push('/write');
+}
 </script>
 
 <template>
@@ -342,52 +402,49 @@ function recordCompactParts(r: NdefRecordResource): string[] {
             </n-flex>
 
             <div style="margin-bottom: 16px;">
-                <n-text strong style="font-size: 14px;">{{ t('read.tags') }}</n-text>
-                <div v-if="!tags.length" style="margin-top: 8px;">
-                    <n-text depth="3">{{ t('common.noData') }}</n-text>
+                <div style="margin-bottom: 8px;">
+                    <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('read.tags') }}</n-text>
                 </div>
+                
+                <n-empty v-if="!tags.length" :description="t('common.noData')" style="margin-top: 24px; margin-bottom: 16px;" />
 
                 <n-flex v-else vertical size="small" style="margin-top: 12px;">
-                    <n-descriptions
+                    <div
                         v-for="tag in tags"
                         :key="tag.tag_id"
-                        bordered
-                        :column="1"
-                        label-placement="left"
+                        style="display: grid; grid-template-columns: 80px 1fr; gap: 8px 16px; margin-bottom: 16px;"
                     >
-                        <n-descriptions-item :label="t('read.uid')">
-                            {{ tag.uid ? base64ToHex(tag.uid) : '–' }}
-                        </n-descriptions-item>
-                        <n-descriptions-item :label="t('read.atr')">
-                            {{ tag.atr ? base64ToHex(tag.atr) : '–' }}
-                        </n-descriptions-item>
-                        <n-descriptions-item :label="t('read.vendor')">
-                            {{ tag.vendor || '–' }}
-                        </n-descriptions-item>
-                        <n-descriptions-item :label="t('read.product')">
-                            {{ tag.product || '–' }}
-                        </n-descriptions-item>
-                    </n-descriptions>
+                        <n-text depth="3">{{ t('read.uid') }}</n-text>
+                        <n-text>{{ tag.uid ? base64ToHex(tag.uid) : '–' }}</n-text>
+                        
+                        <n-text depth="3">{{ t('read.atr') }}</n-text>
+                        <n-text>{{ tag.atr ? base64ToHex(tag.atr) : '–' }}</n-text>
+                        
+                        <n-text depth="3">{{ t('read.vendor') }}</n-text>
+                        <n-text>{{ tag.vendor || '–' }}</n-text>
+                        
+                        <n-text depth="3">{{ t('read.product') }}</n-text>
+                        <n-text>{{ tag.product || '–' }}</n-text>
+                    </div>
                 </n-flex>
             </div>
 
-            <div v-if="ndef">
-                <n-flex vertical size="small" style="margin-top: 12px;">
-                    <n-flex align="center" justify="space-between" :wrap="true" style="gap: 12px;">
-                        <n-text strong style="font-size: 14px;">{{ t('read.ndef') }}</n-text>
-
-                        <n-flex align="center" :wrap="false" style="gap: 8px">
-                            <n-text depth="3">{{ t('read.recordsView') }}:</n-text>
-                            <n-select v-model:value="outputMode" :options="recordOptions" style="width: 140px" />
+            <div v-if="ndef" style="margin-top: 32px">
+                <n-flex vertical size="medium">
+                    <n-flex align="center" justify="space-between" :wrap="false" style="margin-bottom: 8px;">
+                        <n-flex align="center" :wrap="false" style="gap: 8px;">
+                            <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('read.ndef') }}</n-text>
+                            <n-tag :bordered="false" size="small" :type="ndef.read_only ? 'default' : 'success'" :style="ndef.read_only ? { borderRadius: '6px', backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#fafafc', color: 'var(--n-text-color-3)' } : { borderRadius: '6px' }">
+                                {{ ndef.read_only ? t('read.accessReadOnly') : t('read.accessReadWrite') }}
+                            </n-tag>
+                        </n-flex>
+                        <n-flex :wrap="false" align="center" style="gap: 8px;">
+                            <n-button secondary size="small" @click="saveToFile">{{ t('common.save') }}</n-button>
+                            <n-button secondary size="small" @click="navigateToWrite">{{ t('write.write') }}</n-button>
                         </n-flex>
                     </n-flex>
 
-                    <n-text depth="3">
-                        {{ t('read.access') }}:
-                        {{ ndef.read_only ? t('read.accessReadOnly') : t('read.accessReadWrite') }}
-                    </n-text>
-
-                    <n-table :bordered="true" :single-line="false" size="small">
+                    <n-table :bordered="false" :single-line="false" size="small" style="table-layout: fixed; width: 100%;">
                         <thead>
                             <tr>
                                 <th style="width: 90px;">#</th>
@@ -402,20 +459,15 @@ function recordCompactParts(r: NdefRecordResource): string[] {
                                 style="cursor: pointer;"
                             >
                                 <td style="white-space: nowrap;">{{ idx + 1 }}</td>
-                                <td>
-                                    <template v-if="outputMode === 'json'">
-                                        <pre style="white-space: pre-wrap; margin: 0">{{ JSON.stringify(r, null, 2) }}</pre>
-                                    </template>
-                                    <template v-else>
-                                        <n-flex align="center" :wrap="false" style="gap: 10px">
-                                            <n-icon size="18">
-                                                <component :is="recordIcon(r.type)" />
-                                            </n-icon>
-                                            <n-text style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                                {{ recordCompactParts(r).join(', ') || r.type }}
-                                            </n-text>
-                                        </n-flex>
-                                    </template>
+                                <td style="overflow: hidden;">
+                                    <n-flex align="center" :wrap="false" style="gap: 10px; width: 100%; min-width: 0;">
+                                        <n-icon size="18" style="flex-shrink: 0;">
+                                            <component :is="recordIcon(r.type)" />
+                                        </n-icon>
+                                        <n-text style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;">
+                                            {{ recordCompactParts(r).join(', ') || r.type }}
+                                        </n-text>
+                                    </n-flex>
                                 </td>
                             </tr>
                         </tbody>
@@ -427,7 +479,7 @@ function recordCompactParts(r: NdefRecordResource): string[] {
         <n-modal
             v-model:show="recordModalOpen"
             preset="card"
-            style="width: 460px; max-width: calc(100vw - 48px);"
+            style="width: 520px; max-width: calc(100vw - 48px);"
         >
             <template #header>
                 <n-flex align="center" :wrap="false" style="gap: 12px">
@@ -436,6 +488,9 @@ function recordCompactParts(r: NdefRecordResource): string[] {
                     </n-icon>
                     <div style="font-weight: 600; font-size: 16px;">{{ recordTitle(selectedRecord) }}</div>
                 </n-flex>
+            </template>
+            <template #header-extra>
+                <n-select v-model:value="outputMode" :options="recordOptions" size="small" style="width: 105px;" />
             </template>
 
             <template v-if="outputMode === 'json'">
@@ -451,9 +506,6 @@ function recordCompactParts(r: NdefRecordResource): string[] {
                     </n-text>
                 </div>
 
-                <n-flex justify="end">
-                    <n-button text @click="recordModalOpen = false">{{ t('common.close') }}</n-button>
-                </n-flex>
             </template>
         </n-modal>
     </n-flex>

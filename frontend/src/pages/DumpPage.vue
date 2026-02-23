@@ -9,6 +9,7 @@ import { useAdaptersStore } from '../stores/adapters';
 import { useLicenseStore } from '../stores/license';
 import { useRunsStore } from '../stores/runs';
 import { useJobModalStore } from '../stores/jobModal';
+import { useWsStore } from '../stores/ws';
 import { type JobDraft } from '../services/capabilities';
 
 import { Command } from 'nfc-jsclient/dist/models/commands';
@@ -27,6 +28,7 @@ const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const runs = useRunsStore();
 const jobModal = useJobModalStore();
+const ws = useWsStore();
 
 const sending = ref(false);
 const lastJobId = ref('');
@@ -39,7 +41,7 @@ const lastRun = computed(() => {
     return runs.lastRunByAdapterId[adapters.selectedAdapterId] ?? null;
 });
 
-const canDump = computed(() => !!adapters.selectedAdapterId && !sending.value);
+const canDump = computed(() => !!adapters.selectedAdapterId && !sending.value && ws.connected);
 
 const outputOptions = computed(() => [
     { label: t('dump.all'), value: 'all' },
@@ -127,7 +129,7 @@ async function onDump() {
     try {
         const res = await submitJob({
             adapterId: adapters.selectedAdapterId,
-            jobName: 'dump',
+            jobName: t('dump.pageTitle'),
             draft,
             access: license.access,
             onWarning: w => message.warning(w),
@@ -138,7 +140,7 @@ async function onDump() {
         }
         lastJobId.value = res.jobId;
         message.success(t('common.jobSubmitted'));
-        jobModal.openForJob({ adapterId: adapters.selectedAdapterId, jobId: res.jobId, jobName: 'dump' });
+        jobModal.openForJob({ adapterId: adapters.selectedAdapterId, jobId: res.jobId, jobName: t('dump.pageTitle') });
     } catch (e) {
         message.error(e instanceof Error ? e.message : String(e));
     } finally {
@@ -175,8 +177,8 @@ async function onDump() {
             </div>
             
             <n-flex align="center" :wrap="true" style="gap: 8px; margin-bottom: 12px;">
-                <n-button :disabled="!outputText" @click="saveResults">{{ t('common.save') }}</n-button>
-                <n-button :disabled="!dump" @click="clear">{{ t('common.clear') }}</n-button>
+                <n-button secondary :disabled="!outputText" @click="saveResults">{{ t('common.save') }}</n-button>
+                <n-button secondary :disabled="!dump" @click="clear">{{ t('common.clear') }}</n-button>
             </n-flex>
 
             <n-input

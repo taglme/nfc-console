@@ -5,7 +5,7 @@
     "missingAppKey": "Отсутствует встроенный X-App-Key. Соберите приложение с -ldflags -X main.EmbeddedAppKey=...",
     "appKeyMissingWarn": "Ключ приложения отсутствует. API может отклонять запросы, пока вы не пересоберёте приложение со встроенным ключом.",
     "selectAdapterFirst": "Сначала выберите адаптер.",
-    "wsDisconnectedWarn": "WebSocket отключён. Job можно отправить, но результаты могут не появиться, пока WS не подключён."
+    "wsDisconnectedWarn": "WebSocket отключён. Задание можно отправить, но результаты могут не появиться, пока WebSocket не подключён."
   },
   "menu": {
     "console": "Консоль",
@@ -20,13 +20,13 @@
   },
   "common": {
     "apply": "Применить",
-    "connectWs": "Подключить WS",
+    "connectWs": "Подключить",
     "disconnect": "Отключить",
     "host": "Хост",
     "ipAddress": "IP адрес",
     "port": "Порт",
     "version": "Версия",
-    "tier": "Тир",
+    "tier": "Уровень",
     "ws": "WS",
     "connected": "подключён",
     "connecting": "подключение",
@@ -37,12 +37,17 @@
     "save": "Сохранить",
     "clear": "Очистить",
     "load": "Загрузить",
-    "jobSubmitted": "Job отправлен.",
+    "jobSubmitted": "Задание отправлено.",
     "close": "Закрыть",
     "yes": "да",
     "no": "нет",
     "cancel": "Отмена",
-    "noData": "Нет данных"
+    "noData": "Нет данных",
+    "appKey": "Ключ приложения",
+    "statusOk": "ok",
+    "statusMissing": "отсутствует",
+    "statusLoading": "загрузка",
+    "wsConnectRefused": "В соединении отказано или ошибка сети"
   },
   "jobModal": {
     "pending": "Ожидание тега",
@@ -101,14 +106,14 @@
     "tagId": "ID метки",
     "uid": "UID",
     "atr": "ATR",
-    "vendor": "Vendor",
-    "product": "Model",
+    "vendor": "Вендор",
+    "product": "Модель",
     "tech": "Технология",
     "record": "Запись",
     "content": "Содержимое"
   },
   "write": {
-    "title": "Write",
+    "title": "Запись",
     "pageTitle": "Запись NDEF метки",
     "pageDesc": "Запись NDEF сообщения на NFC метку. Сообщение может состоять из нескольких записей. Опция блокировки памяти защищает от перезаписи (это действие нельзя отменить).",
     "recordsSubtitle": "NDEF записи",
@@ -154,49 +159,63 @@
     "text": {
       "modal_title": "Простой текст",
       "text": "Текст",
-      "lang": "Язык"
+      "lang": "Язык",
+      "placeholder": "Сообщение"
     },
     "url": {
-      "modal_title": "URL",
-      "url": "URL"
+      "modal_title": "URL ссылка",
+      "url": "URL",
+      "placeholder": "https://tagl.me"
     },
     "uri": {
-      "modal_title": "URI",
-      "uri": "URI"
+      "modal_title": "URI ссылка",
+      "uri": "URI",
+      "placeholder": "wss://localhost:3000"
     },
     "phone": {
-      "modal_title": "Телефон",
-      "phone_number": "Телефон"
+      "modal_title": "Номер телефона",
+      "phone_number": "Телефон",
+      "placeholder": "+1 234 567 89"
     },
     "geo": {
-      "modal_title": "Гео",
+      "modal_title": "Геолокация",
       "latitude": "Широта",
-      "longitude": "Долгота"
+      "longitude": "Долгота",
+      "lat_placeholder": "37.77",
+      "long_placeholder": "-122.41"
     },
     "aar": {
       "modal_title": "Android приложение",
-      "package_name": "Пакет"
+      "package_name": "Пакет",
+      "placeholder": "com.example.app"
     },
     "poster": {
-      "modal_title": "Smart poster",
+      "modal_title": "Смарт постер",
       "title": "Заголовок",
-      "uri": "URI"
+      "uri": "URI",
+      "title_placeholder": "Посмотри tagl.me!",
+      "uri_placeholder": "https://tagl.me"
     },
     "mime": {
-      "modal_title": "MIME",
+      "modal_title": "Mime тип",
       "type": "Тип",
       "format": "Формат",
-      "content": "Содержимое"
+      "content": "Содержимое",
+      "type_placeholder": "text/plain",
+      "content_placeholder": "Информация"
     },
     "raw": {
-      "modal_title": "Raw",
+      "modal_title": "Общая запись",
       "tnf": "TNF",
       "type": "Тип",
       "id": "ID",
-      "payload": "Payload"
+      "payload": "Payload",
+      "type_placeholder": "U",
+      "id_placeholder": "1",
+      "payload_placeholder": "02 FF 2C"
     },
     "vcard": {
-      "modal_title": "vCard",
+      "modal_title": "Визитная карточка",
       "first_name": "Имя",
       "last_name": "Фамилия",
       "organization": "Организация",
@@ -210,7 +229,19 @@
       "address_postal_code": "Индекс",
       "address_region": "Регион",
       "address_city": "Город",
-      "address_street": "Улица"
+      "address_street": "Улица",
+      "first_name_placeholder": "Иван",
+      "last_name_placeholder": "Иванов",
+      "organization_placeholder": "Taglme",
+      "title_placeholder": "Инженер",
+      "email_placeholder": "ivan@example.com",
+      "phone_placeholder": "+123456789",
+      "site_placeholder": "https://example.com",
+      "address_country_placeholder": "Россия",
+      "address_postal_code_placeholder": "100000",
+      "address_region_placeholder": "Москва",
+      "address_city_placeholder": "Москва",
+      "address_street_placeholder": "Тверская"
     }
   },
   "languages": {
@@ -233,5 +264,19 @@
     "portuguese": "Португальский",
     "russian": "Русский",
     "spanish": "Испанский"
+  },
+  "about": {
+    "hostInfo": "Информация о хосте",
+    "name": "Имя хоста",
+    "version": "Версия приложения хоста",
+    "mid": "MID (Machine ID)",
+    "licenseId": "ID лицензии",
+    "licenseStart": "Дата начала лицензии",
+    "licenseEnd": "Дата окончания лицензии",
+    "supportEnd": "Дата окончания поддержки",
+    "plugins": "Список доступных плагинов",
+    "type": "Тип лицензии",
+    "tier": "Уровень лицензии",
+    "licenseDetails": "Информация по лицензии"
   }
 }

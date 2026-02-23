@@ -17,6 +17,10 @@ import {
   NMenu,
   NMessageProvider,
   NText,
+  NCollapse,
+  NCollapseItem,
+  NDescriptions,
+  NDescriptionsItem,
   createDiscreteApi,
   darkTheme,
   NTag,
@@ -32,7 +36,6 @@ import logoLight from './assets/images/logo_c.png';
 import logoDark from './assets/images/logo_w.png';
 
 import {
-  RefreshOutline,
   SaveOutline,
   WifiOutline,
   TerminalOutline,
@@ -42,6 +45,7 @@ import {
   SettingsOutline,
   MoonOutline,
   SunnyOutline,
+  InformationCircleOutline,
 } from '@vicons/ionicons5';
 
 import { useAppStore } from './stores/app';
@@ -51,7 +55,7 @@ import { useLicenseStore } from './stores/license';
 import { useSettingsStore } from './stores/settings';
 import { useWsStore } from './stores/ws';
 import { startWsBridge } from './services/wsBridge';
-import { resetSdk } from './services/sdk';
+import { resetSdk, getSdk } from './services/sdk';
 import { useRunsStore } from './stores/runs';
 import { useRateLimitStore } from './stores/rateLimit';
 import { useSnippetsStore } from './stores/snippets';
@@ -59,6 +63,10 @@ import JobStatusModal from './components/JobStatusModal.vue';
 
 const router = useRouter();
 const route = useRoute();
+
+const winMin = () => (window as any).runtime?.WindowMinimise?.();
+const winMax = () => (window as any).runtime?.WindowToggleMaximise?.();
+const winClose = () => (window as any).runtime?.Quit?.();
 
 const app = useAppStore();
 const settings = useSettingsStore();
@@ -79,6 +87,8 @@ const themeVars = useThemeVars();
 const isCollapsed = ref(false);
 
 const showConnectionModal = ref(false);
+const showAboutModal = ref(false);
+
 const hostDraft = ref('127.0.0.1');
 const portDraft = ref<number>(3011);
 
@@ -104,39 +114,104 @@ const activeMenuKey = computed(() => route.path);
 const theme = computed(() => (settings.theme === 'dark' ? darkTheme : null));
 const nLocale = computed(() => (locale.value === 'ru' ? ruRU : enUS));
 
-const themeOverrides: GlobalThemeOverrides = {
-  common: {
-    borderRadius: '8px',
-    primaryColor: '#348be0',
-    primaryColorHover: '#52a2f0',
-    primaryColorPressed: '#226db8',
-    primaryColorSuppl: '#52a2f0',
-  },
-  Card: {
-    borderRadius: '12px',
-  },
-  Button: {
-    textColorPrimary: '#ffffff',
-    textColorHoverPrimary: '#ffffff',
-    textColorPressedPrimary: '#ffffff',
-    textColorFocusPrimary: '#ffffff',
-    colorPrimary: '#348be0',
-    colorHoverPrimary: '#52a2f0',
-    colorPressedPrimary: '#226db8',
-    colorFocusPrimary: '#52a2f0',
-    borderPrimary: '1px solid #348be0',
-    borderHoverPrimary: '1px solid #52a2f0',
-    borderPressedPrimary: '1px solid #226db8',
-    borderFocusPrimary: '1px solid #52a2f0',
-  },
-  Menu: {
-    itemColorActive: 'transparent',
-    itemColorActiveHover: 'transparent',
-    itemColorActiveCollapsed: 'transparent',
-    itemTextColorActive: '#348be0',
-    itemIconColorActive: '#348be0',
-  }
-};
+const themeOverrides = computed<GlobalThemeOverrides>(() => {
+  const isDark = settings.theme === 'dark';
+  
+  // Base primary colors for text, highlights, outlines, and menus (MUST be readable!)
+  const primaryText = isDark ? '#ffaa80' : '#e66b3c';
+  const primaryTextHover = isDark ? '#ffbea3' : '#ff8554';
+  const primaryTextPressed = isDark ? '#f28e5c' : '#bd5028';
+  
+  // Specific dark colors ONLY for solid Button backgrounds
+  const buttonBg = isDark ? '#e66b3c' : '#e66b3c';
+  const buttonBgHover = isDark ? '#ff8554' : '#ff8554';
+  const buttonBgPressed = isDark ? '#bd5028' : '#bd5028';
+
+  const activeBg = 'transparent';
+  const activeHoverBg = isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(243, 243, 245, 1)';
+
+  return {
+    common: {
+      borderRadius: '8px',
+      primaryColor: primaryText,
+      primaryColorHover: primaryTextHover,
+      primaryColorPressed: primaryTextPressed,
+      primaryColorSuppl: primaryTextHover,
+      fontSize: '12px',
+      fontSizeMini: '10px',
+      fontSizeTiny: '10px',
+      fontSizeSmall: '12px',
+      fontSizeMedium: '12px',
+      fontSizeLarge: '13px',
+      fontSizeHuge: '14px',
+    },
+    Card: {
+      borderRadius: '12px',
+      fontSizeSmall: '12px',
+      fontSizeMedium: '12px',
+      fontSizeLarge: '12px',
+      fontSizeHuge: '12px',
+      titleFontSizeSmall: '16px',
+      titleFontSizeMedium: '16px',
+      titleFontSizeLarge: '16px',
+      titleFontSizeHuge: '16px',
+    },
+    Dialog: {
+      titleFontSize: '16px',
+      fontSize: '12px',
+    },
+    List: {
+      fontSize: '12px',
+    },
+    Descriptions: {
+      fontSizeSmall: '12px',
+      fontSizeMedium: '12px',
+      fontSizeLarge: '12px',
+    },
+    Button: {
+      textColorPrimary: '#ffffff',
+      textColorHoverPrimary: '#ffffff',
+      textColorPressedPrimary: '#ffffff',
+      textColorFocusPrimary: '#ffffff',
+      colorPrimary: buttonBg,
+      colorHoverPrimary: buttonBgHover,
+      colorPressedPrimary: buttonBgPressed,
+      colorFocusPrimary: buttonBgHover,
+      borderPrimary: `1px solid ${buttonBg}`,
+      borderHoverPrimary: `1px solid ${buttonBgHover}`,
+      borderPressedPrimary: `1px solid ${buttonBgPressed}`,
+      borderFocusPrimary: `1px solid ${buttonBgHover}`,
+    },
+    Menu: {
+      itemColorActive: activeBg,
+      itemColorActiveHover: activeHoverBg,
+      itemColorActiveCollapsed: activeBg,
+      itemTextColorActive: primaryText,
+      itemIconColorActive: primaryText,
+      itemIndicatorColor: 'transparent',
+      itemIndicatorColorHover: 'transparent',
+      itemIndicatorColorActive: 'transparent',
+      itemIndicatorColorActiveHover: 'transparent',
+      borderRadius: '8px',
+    },
+    Input: {
+      border: '1px solid transparent',
+      borderHover: '1px solid transparent',
+      color: 'var(--n-border-color)',
+      colorFocus: 'var(--n-border-color)',
+    },
+    Select: {
+      peers: {
+        InternalSelection: {
+          border: '1px solid transparent',
+          borderHover: '1px solid transparent',
+          color: 'var(--n-border-color)',
+          colorActive: 'var(--n-border-color)',
+        }
+      }
+    }
+  };
+});
 
 const headerStyle = computed(() => ({
   backgroundColor: themeVars.value.primaryColor,
@@ -144,9 +219,9 @@ const headerStyle = computed(() => ({
 }));
 
 const appKeyStatus = computed(() => {
-  if (!app.embeddedAppKeyLoaded) return 'loading';
-  if (app.embeddedAppKey.trim().length === 0) return 'missing';
-  return 'ok';
+  if (!app.embeddedAppKeyLoaded) return t('common.statusLoading');
+  if (app.embeddedAppKey.trim().length === 0) return t('common.statusMissing');
+  return t('common.statusOk');
 });
 
 function onMenuSelect(key: string) {
@@ -194,12 +269,6 @@ function saveConnectionSettings() {
   const host = hostDraft.value.trim();
   const port = Math.trunc(portDraft.value);
 
-  const { host: currHost, port: currPort } = parseBaseUrlToHostPort(settings.baseUrl);
-  if (host === currHost && port === currPort) {
-    showConnectionModal.value = false;
-    return;
-  }
-
   if (!host) {
     message.error(t('common.enterHost'));
     return;
@@ -209,7 +278,15 @@ function saveConnectionSettings() {
     return;
   }
 
-  applyBaseUrl(buildBaseUrlFromHostPort(host, port));
+  const { host: currHost, port: currPort } = parseBaseUrlToHostPort(settings.baseUrl);
+  if (host !== currHost || port !== currPort) {
+    applyBaseUrl(buildBaseUrlFromHostPort(host, port));
+  } else {
+    resetSdk();
+    ws.reset();
+    void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
+  }
+
   showConnectionModal.value = false;
 
   if (app.embeddedAppKey.trim().length === 0) {
@@ -222,16 +299,15 @@ function saveConnectionSettings() {
 function setLocale(next: 'en' | 'ru') {
   settings.setLocale(next);
   locale.value = next;
-
-  resetSdk();
-  ws.reset();
-  runs.clear();
-  rateLimit.reset();
-  snippets.reset();
-
-  void Promise.all([about.refresh(), license.refreshAccess(), adapters.refresh()]);
-  if (app.embeddedAppKey.trim().length !== 0) {
-    ws.connect();
+  
+  const sdk = getSdk();
+  sdk.setLocale(next);
+  if (ws.connected) {
+    try {
+      sdk.Ws.setLocale(next);
+    } catch (e) {
+      console.error('Failed to set ws locale', e);
+    }
   }
 }
 
@@ -268,14 +344,105 @@ onMounted(async () => {
 </script>
 
 <template>
-  <n-config-provider :theme="theme" :theme-overrides="themeOverrides" :locale="nLocale">
-    <n-message-provider>
-      <JobStatusModal />
-      <n-layout has-sider style="height: 100vh;">
+  <n-config-provider :theme="theme" :theme-overrides="themeOverrides" :locale="nLocale" :style="{ '--app-primary-color': themeOverrides.common?.primaryColor }">
+    <div style="display: flex; flex-direction: column; height: 100vh;">
+      <!-- Custom Titlebar -->
+      <div 
+        style="height: 48px; width: 100%; display: flex; align-items: center; --wails-draggable: drag; z-index: 100; user-select: none; position: relative;"
+        :style="{ 
+          backgroundColor: settings.theme === 'dark' ? '#202026' : '#fafafa', 
+          color: settings.theme === 'dark' ? '#dcdcdc' : '#333',
+          borderBottom: settings.theme === 'dark' ? '1px solid #333' : '1px solid #e0e0e0'
+        }"
+      >
+        <!-- Left: Brand -->
+        <div style="flex: 1; display: flex; align-items: center; gap: 8px; padding-left: 16px;">
+           <img :src="settings.theme === 'dark' ? logoDark : logoLight" alt="logo" style="width: 24px; height: 24px; object-fit: contain;" />
+           <span style="font-weight: 800; font-size: 15px;">Console</span>
+        </div>
+
+        <!-- Center: Adapter Selection -->
+        <div style="flex: 1; display: flex; justify-content: center; align-items: center; gap: 4px;">
+           <div style="--wails-draggable: no-drag;">
+             <n-select
+              size="small"
+              :value="adapters.selectedAdapter ? adapters.selectedAdapterId : null"
+              :options="adapters.options"
+              :loading="adapters.loading"
+              :placeholder="t('console.targetAdapter')"
+              style="width: 280px"
+              :theme-overrides="{
+                peers: {
+                  InternalSelection: {
+                    color: settings.theme === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+                    colorActive: settings.theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.07)',
+                    border: '1px solid transparent',
+                    borderHover: '1px solid transparent',
+                    borderFocus: '1px solid transparent',
+                    boxShadowFocus: 'none',
+                    boxShadowActive: 'none',
+                    paddingSingle: '0 12px',
+                    borderRadius: '8px',
+                    fontSizeSmall: '12px'
+                  }
+                }
+              }"
+              @update:show="(show) => { if (show) adapters.refresh() }"
+              @update:value="(v) => adapters.select(v || '')"
+            />
+           </div>
+        </div>
+
+        <!-- Right: Actions & Window Controls -->
+        <div style="flex: 1; display: flex; justify-content: flex-end; height: 100%; align-items: center;">
+          <div style="display: flex; height: 100%; align-items: center; gap: 8px; --wails-draggable: no-drag;">
+            <n-tag
+            size="small"
+            :bordered="false"
+            round
+            :type="wsIndicatorType as any"
+            style="cursor: pointer; user-select: none;"
+            @click="openConnectionSettings"
+          >
+            <div style="display: flex; align-items: center; gap: 4px; line-height: 1; font-size: 12px;">
+              <n-icon :component="WifiOutline" />
+              <span>{{ wsIndicatorText }}</span>
+            </div>
+          </n-tag>
+          
+          <n-button
+            quaternary
+            size="small"
+            @click="setLocale(settings.locale === 'en' ? 'ru' : 'en')"
+            style="font-weight: bold; font-size: 12px; padding: 0 6px;"
+            :focusable="false"
+          >
+            {{ settings.locale.toUpperCase() }}
+          </n-button>
+          
+          <div style="display: flex; height: 100%; margin-left: 4px;">
+            <div class="win-btn" @click="winMin">
+              <svg viewBox="0 0 12 12" width="12" height="12"><path d="M0,6 L12,6" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+            </div>
+            <div class="win-btn" @click="winMax">
+              <svg viewBox="0 0 12 12" width="12" height="12"><rect x="1" y="1" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+            </div>
+            <div class="win-btn win-close" @click="winClose">
+              <svg viewBox="0 0 12 12" width="12" height="12"><path d="M1,1 L11,11 M11,1 L1,11" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+            </div>
+          </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Body -->
+      <div style="flex: 1; min-height: 0;">
+        <n-message-provider>
+          <JobStatusModal />
+          <n-layout has-sider style="height: 100%;">
 
         <!-- Sidebar -->
         <n-layout-sider
-          bordered
           collapse-mode="width"
           :collapsed-width="64"
           :width="220"
@@ -283,15 +450,8 @@ onMounted(async () => {
           show-trigger="bar"
           v-model:collapsed="isCollapsed"
           content-style="display: flex; flex-direction: column; height: 100%;"
+          :style="{ backgroundColor: settings.theme === 'dark' ? '#202026' : '#fafafa' }"
         >
-          <!-- Brand -->
-          <n-flex align="center" justify="center" style="height: 64px; box-sizing: border-box; border-bottom: 1px solid var(--n-border-color); overflow: hidden;">
-             <div style="display: flex; align-items: center; white-space: nowrap; gap: 8px;">
-                <img :src="settings.theme === 'dark' ? logoDark : logoLight" alt="logo" style="width: 32px; height: 32px; object-fit: contain;" />
-                <span v-if="!isCollapsed" style="font-weight: 800; font-size: 18px;">Console</span>
-             </div>
-          </n-flex>
-
           <n-menu
             :collapsed-width="64"
             :collapsed-icon-size="22"
@@ -302,10 +462,10 @@ onMounted(async () => {
           />
 
           <!-- Bottom Actions (Theme) -->
-          <div style="padding: 12px; border-top: 1px solid var(--n-border-color); margin-top: auto;">
+          <div style="padding: 12px; margin-top: auto;">
             <n-button
               quaternary
-              :style="isCollapsed ? 'width: 100%; justify-content: center; padding: 0;' : 'width: 100%; justify-content: flex-start; padding: 0 16px; font-size: 14px;'"
+              :style="isCollapsed ? 'width: 100%; justify-content: center; padding: 0;' : 'width: 100%; justify-content: flex-start; padding: 0 16px; font-size: 12px;'"
               @click="settings.setTheme(settings.theme === 'dark' ? 'light' : 'dark')"
             >
                <template #icon>
@@ -319,59 +479,10 @@ onMounted(async () => {
         <!-- Main Layout -->
         <n-layout content-style="display: flex; flex-direction: column; height: 100%;">
           
-          <!-- Header -->
-          <n-layout-header bordered style="height: 64px; padding: 0 24px; flex-shrink: 0;">
-             <n-flex align="center" justify="space-between" style="height: 100%;">
-                
-                <!-- Center / Search / Adapters -->
-                <n-flex align="center" :wrap="false" style="gap: 4px;">
-                   <n-select
-                      size="small"
-                      :value="adapters.selectedAdapterId"
-                      :options="adapters.options"
-                      :loading="adapters.loading"
-                      :disabled="adapters.loading"
-                      :placeholder="t('console.targetAdapter')"
-                      clearable
-                      style="width: 280px"
-                      @update:value="(v) => adapters.select(v || '')"
-                    />
-                    <n-button size="small" quaternary circle :disabled="adapters.loading" @click="adapters.refresh()">
-                      <template #icon>
-                        <n-icon :component="RefreshOutline" />
-                      </template>
-                    </n-button>
-                </n-flex>
 
-                <!-- Right Actions -->
-                <n-flex align="center" :wrap="false" style="gap: 12px;">
-
-                  <n-button
-                    quaternary
-                    size="small"
-                    @click="setLocale(settings.locale === 'en' ? 'ru' : 'en')"
-                    style="font-weight: bold; font-size: 14px; padding: 0 6px;"
-                  >
-                    {{ settings.locale.toUpperCase() }}
-                  </n-button>
-
-                  <n-tag
-                    size="small"
-                    :bordered="false"
-                    round
-                    :type="wsIndicatorType as any"
-                    style="cursor: pointer; user-select: none"
-                    @click="openConnectionSettings"
-                  >
-                    <n-icon :component="WifiOutline" style="margin-right: 6px" />
-                    {{ wsIndicatorText }}
-                  </n-tag>
-                </n-flex>
-             </n-flex>
-          </n-layout-header>
 
           <n-layout-content
-              :content-style="{ padding: '24px', paddingBottom: '32px', backgroundColor: settings.theme === 'dark' ? '#101014' : '#f5f7fa', minHeight: '100%' }"
+              :content-style="{ padding: '24px', paddingBottom: '32px', backgroundColor: settings.theme === 'dark' ? '#101014' : '#f5f5f5', minHeight: '100%' }"
               :native-scrollbar="false"
               style="flex: 1; overflow: hidden;"
           >
@@ -380,19 +491,24 @@ onMounted(async () => {
             </div>
           </n-layout-content>
 
-          <n-layout-footer bordered position="absolute" style="padding: 4px 16px; font-size: 11px; bottom: 0; z-index: 1;">
-             <n-flex :wrap="true" style="gap: 16px;">
-              <n-text depth="3">
-                {{ t('common.version') }}: {{ about.info?.version || '—' }}
-              </n-text>
-              <n-text depth="3">
-                {{ t('common.tier') }}: {{ license.hostTier }}
-              </n-text>
-              <n-text depth="3">
-                App key: {{ appKeyStatus }}
-              </n-text>
-              <n-text v-if="ws.lastError" type="error">WS Error: {{ ws.lastError }}</n-text>
-            </n-flex>
+          <n-layout-footer position="absolute" style="padding: 4px 16px; font-size: 11px; bottom: 0; z-index: 1;">
+             <n-flex :wrap="false" justify="space-between" align="center">
+               <n-flex :wrap="true" style="gap: 16px;">
+                 <n-text depth="3" style="font-size: 11px;">
+                   {{ t('common.version') }}: {{ about.info?.version || '—' }}
+                 </n-text>
+                 <n-text depth="3" style="font-size: 11px;">
+                   {{ t('common.tier') }}: {{ license.hostTier }}
+                 </n-text>
+                 <n-text depth="3" style="font-size: 11px;">
+                   {{ t('common.appKey') }}: {{ appKeyStatus }}
+                 </n-text>
+               </n-flex>
+               <n-button text size="tiny" @click="showAboutModal = true" style="font-size: 11px;">
+                 <n-icon size="14"><InformationCircleOutline /></n-icon>
+                 <span style="margin-left: 4px">{{ t('about.hostInfo') }}</span>
+               </n-button>
+             </n-flex>
           </n-layout-footer>
         </n-layout>
 
@@ -401,21 +517,56 @@ onMounted(async () => {
           preset="card"
           :title="t('common.connectionSettings')"
           style="width: 360px"
-          @after-leave="saveConnectionSettings"
         >
-          <n-flex vertical style="gap: 12px">
+          <n-flex vertical style="gap: 16px">
+            <n-alert v-if="ws.lastError" type="error" :show-icon="false" style="padding: 8px 12px; font-size: 12px;">
+              {{ ws.lastError === 'CONNECT_REFUSED' ? t('common.wsConnectRefused') : ws.lastError }}
+            </n-alert>
             <n-flex align="center" :wrap="false" style="gap: 12px">
               <n-text style="width: 90px">{{ t('common.ipAddress') }}</n-text>
-              <n-input v-model:value="hostDraft" placeholder="127.0.0.1" style="flex: 1" />
+              <n-input v-model:value="hostDraft" placeholder="127.0.0.1" style="flex: 1" @keyup.enter="saveConnectionSettings" />
             </n-flex>
             <n-flex align="center" :wrap="false" style="gap: 12px">
               <n-text style="width: 90px">{{ t('common.port') }}</n-text>
-              <n-input-number v-model:value="portDraft" :show-button="false" :min="1" :max="65535" style="flex: 1" />
+              <n-input-number v-model:value="portDraft" :show-button="false" :min="1" :max="65535" style="flex: 1" @keyup.enter="saveConnectionSettings" />
             </n-flex>
+            <n-button type="primary" block @click="saveConnectionSettings">
+              {{ t('common.connectWs') }}
+            </n-button>
           </n-flex>
         </n-modal>
 
-      </n-layout>
-    </n-message-provider>
+        <n-modal
+          v-model:show="showAboutModal"
+          preset="card"
+          :title="t('about.hostInfo')"
+          style="width: 500px"
+        >
+          <n-descriptions label-placement="left" :column="1" bordered size="small">
+             <n-descriptions-item :label="t('about.name')">{{ (about.info as any)?.hostName || '—' }}</n-descriptions-item>
+             <n-descriptions-item :label="t('about.version')">{{ about.info ? `${about.info.name} ${about.info.version}` : '—' }}</n-descriptions-item>
+             <n-descriptions-item :label="t('about.mid')">{{ license.license?.machine || '—' }}</n-descriptions-item>
+          </n-descriptions>
+          <n-collapse style="margin-top: 16px;">
+             <n-collapse-item :title="t('about.licenseDetails')" name="1">
+               <n-descriptions label-placement="left" :column="1" bordered size="small">
+                  <n-descriptions-item :label="t('about.licenseId')">{{ license.license?.id || '—' }}</n-descriptions-item>
+                  <n-descriptions-item :label="t('about.licenseStart')">{{ license.license?.start || '—' }}</n-descriptions-item>
+                  <n-descriptions-item :label="t('about.licenseEnd')">{{ license.license?.end || '—' }}</n-descriptions-item>
+                  <n-descriptions-item :label="t('about.supportEnd')">{{ license.license?.support || '—' }}</n-descriptions-item>
+                  <n-descriptions-item :label="t('about.plugins')">
+                     <span v-if="license.license?.plugins?.length">{{ license.license.plugins.join(', ') }}</span>
+                     <span v-else>—</span>
+                  </n-descriptions-item>
+                  <n-descriptions-item :label="t('about.type')">{{ license.license?.type || '—' }}</n-descriptions-item>
+                  <n-descriptions-item :label="t('about.tier')">{{ license.hostTier }}</n-descriptions-item>
+               </n-descriptions>
+             </n-collapse-item>
+          </n-collapse>
+        </n-modal>
+        </n-layout>
+        </n-message-provider>
+      </div>
+    </div>
   </n-config-provider>
 </template>

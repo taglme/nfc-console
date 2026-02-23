@@ -3,6 +3,7 @@ import { watch } from 'vue';
 import { useRunsStore } from '../stores/runs';
 import { useWsStore } from '../stores/ws';
 import { useJobModalStore } from '../stores/jobModal';
+import { useAdaptersStore } from '../stores/adapters';
 
 let started = false;
 
@@ -20,6 +21,18 @@ export function startWsBridge() {
             if (!ev) return;
             runs.ingestWsEvent(ev);
             jobModal.ingestWsEvent(ev);
+        },
+        { deep: false },
+    );
+
+    const adapters = useAdaptersStore();
+    watch(
+        () => ws.connected,
+        isConnected => {
+            if (!isConnected) {
+                adapters.list = [];
+                jobModal.close('auto');
+            }
         },
         { deep: false },
     );

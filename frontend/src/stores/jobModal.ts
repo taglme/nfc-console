@@ -73,14 +73,11 @@ export const useJobModalStore = defineStore('jobModal', {
             // Match original app behavior: if the user closes while pending/activated,
             // try to delete the job to avoid leaving it running.
             if (reason === 'user' && shouldDelete && adapterId && jobId) {
-                const license = useLicenseStore();
-                if (hasScope(license.allowedScopes, 'job:delete')) {
-                    try {
-                        const sdk = getSdk();
-                        await sdk.Jobs.delete(adapterId, jobId);
-                    } catch {
-                        // ignore
-                    }
+                try {
+                    const sdk = getSdk();
+                    await sdk.Jobs.delete(adapterId, jobId);
+                } catch {
+                    // ignore
                 }
             }
         },

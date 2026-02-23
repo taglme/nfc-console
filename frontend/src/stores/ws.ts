@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import type { Event } from 'nfc-jsclient/dist/client/events';
 
 import { getSdk, getSdkKey } from '../services/sdk';
+import { useSettingsStore } from './settings';
 
 export const useWsStore = defineStore('ws', {
     state: () => ({
@@ -34,7 +35,12 @@ export const useWsStore = defineStore('ws', {
             });
 
             sdk.Ws.onError(err => {
-                this.lastError = err instanceof Error ? err.message : String(err);
+                const msg = err instanceof Error ? err.message : String(err);
+                if (msg.includes('undefined. Reason: undefined') || msg.includes('connection refused')) {
+                    this.lastError = 'CONNECT_REFUSED';
+                } else {
+                    this.lastError = msg;
+                }
                 this.connecting = false;
             });
 
@@ -66,7 +72,18 @@ export const useWsStore = defineStore('ws', {
                 this.syncTimer = 0;
             }
             this.syncTimer = setInterval(() => {
+                const wasConnected = this.connected;
                 this.connected = sdk.Ws.isConnected();
+
+                if (this.connected && !wasConnected) {
+                    try {
+                        const settings = useSettingsStore();
+                        sdk.Ws.setLocale(settings.locale);
+                    } catch (e) {
+                        console.error('Failed to sync ws locale on connect', e);
+                    }
+                }
+
                 if (this.connected) this.connecting = false;
             }, 250);
         },

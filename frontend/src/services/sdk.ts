@@ -9,8 +9,11 @@ export function getSdk(): NfcClient {
     const settings = useSettingsStore();
     const app = useAppStore();
 
-    const key = JSON.stringify({ baseUrl: settings.baseUrl, locale: settings.locale, appKey: app.embeddedAppKey });
-    if (client && clientKey === key) return client;
+    const key = JSON.stringify({ baseUrl: settings.baseUrl, appKey: app.embeddedAppKey });
+    if (client && clientKey === key) {
+        client.setLocale(settings.locale);
+        return client;
+    }
 
     clientKey = key;
 
@@ -22,7 +25,7 @@ export function getSdkKey(): string {
     // Ensure the cached key matches how getSdk() decides whether to recreate.
     const settings = useSettingsStore();
     const app = useAppStore();
-    return JSON.stringify({ baseUrl: settings.baseUrl, locale: settings.locale, appKey: app.embeddedAppKey });
+    return JSON.stringify({ baseUrl: settings.baseUrl, appKey: app.embeddedAppKey });
 }
 
 export function resetSdk() {

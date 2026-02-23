@@ -9,6 +9,7 @@ import { useAdaptersStore } from '../stores/adapters';
 import { useLicenseStore } from '../stores/license';
 import { useRunsStore } from '../stores/runs';
 import { useJobModalStore } from '../stores/jobModal';
+import { useWsStore } from '../stores/ws';
 import { type JobDraft } from '../services/capabilities';
 
 import { CommandStatus } from 'nfc-jsclient/dist/models/commands';
@@ -19,6 +20,7 @@ const adapters = useAdaptersStore();
 const license = useLicenseStore();
 const runs = useRunsStore();
 const jobModal = useJobModalStore();
+const ws = useWsStore();
 
 const sendingLock = ref(false);
 const sendingFormat = ref(false);
@@ -84,11 +86,11 @@ async function submitActionJob(jobName: string, steps: Array<{ command: string; 
 }
 
 async function onLock() {
-    await submitActionJob('lock', [{ command: 'lock_permanent', params: {} }], 'lock');
+    await submitActionJob(t('other.lockTitle'), [{ command: 'lock_permanent', params: {} }], 'lock');
 }
 
 async function onFormat() {
-    await submitActionJob('format', [{ command: 'format_default', params: {} }], 'format');
+    await submitActionJob(t('other.formatTitle'), [{ command: 'format_default', params: {} }], 'format');
 }
 </script>
 
@@ -107,7 +109,7 @@ async function onFormat() {
                 <n-button
                     type="primary"
                     :loading="sendingLock"
-                    :disabled="!adapters.selectedAdapterId"
+                    :disabled="!adapters.selectedAdapterId || !ws.connected"
                     @click="onLock"
                     style="min-width: 120px"
                 >
@@ -129,7 +131,7 @@ async function onFormat() {
                  <n-button
                     type="primary"
                     :loading="sendingFormat"
-                    :disabled="!adapters.selectedAdapterId"
+                    :disabled="!adapters.selectedAdapterId || !ws.connected"
                     @click="onFormat"
                     style="min-width: 120px"
                 >

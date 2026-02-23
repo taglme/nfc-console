@@ -26,11 +26,11 @@ function hasScope(scopes: string[] | null | undefined, required: string): boolea
 export type SubmitResult =
     | { ok: true; jobId: string }
     | {
-          ok: false;
-          error: string;
-          errorKey?: string;
-          errorParams?: Record<string, unknown>;
-      };
+        ok: false;
+        error: string;
+        errorKey?: string;
+        errorParams?: Record<string, unknown>;
+    };
 
 export async function submitJob(params: {
     adapterId: string;
@@ -59,18 +59,18 @@ export async function submitJob(params: {
     enforced.warnings.forEach(w => params.onWarning?.(w));
 
     const rateLimit = useRateLimitStore();
-	if (!app.ignoreHostLicense) {
-		const rateCheck = rateLimit.check(params.access?.create_job_rate_limit ?? undefined);
-		if (!rateCheck.ok) {
-			const seconds = Math.ceil(rateCheck.waitMs / 1000);
-			return {
-				ok: false,
-				error: 'rate_limit',
-				errorKey: 'errors.rateLimit',
-				errorParams: { seconds },
-			};
-		}
-	}
+    if (!app.ignoreHostLicense) {
+        const rateCheck = rateLimit.check(params.access?.create_job_rate_limit ?? undefined);
+        if (!rateCheck.ok) {
+            const seconds = Math.ceil(rateCheck.waitMs / 1000);
+            return {
+                ok: false,
+                error: 'rate_limit',
+                errorKey: 'errors.rateLimit',
+                errorParams: { seconds },
+            };
+        }
+    }
 
     const job: NewJob = {
         job_name: params.jobName,
@@ -81,13 +81,21 @@ export async function submitJob(params: {
 
     const sdk = getSdk();
 
-    // Clearing the job queue requires `job:delete` scope.
-    // Many licenses allow job creation but do not allow deletion.
-    // In that case, skip queue cleanup instead of failing the primary action.
-    if (hasScope(params.access?.allowed_scopes, 'job:delete')) {
+    try {
         await sdk.Jobs.deleteAll(params.adapterId);
+    } catch {
+        // ignore if not permitted
     }
-    const created = await sdk.Jobs.add(params.adapterId, job);
+    let created;
+    try {
+        created = await sdk.Jobs.add(params.adapterId, job);
+    } catch (e) {
+        let msg = String(e);
+        if (e && typeof e === 'object' && 'message' in e) {
+            msg = String(e.message);
+        }
+        return { ok: false, error: msg };
+    }
 
     // record only after successful submission
     if (!app.ignoreHostLicense) {
