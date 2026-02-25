@@ -260,11 +260,11 @@ watch(
 </script>
 
 <template>
-	<div style="padding: 24px; display: flex; flex-direction: column; gap: 24px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 48px;">
-            <div style="flex: 1; min-width: 0;">
-                <h2 style="font-size: 16px; line-height: 24px; font-weight: 600; color: var(--n-text-color); margin: 0;">{{ t('console.pageTitle') }}</h2>
-                <p style="font-size: 13px; line-height: 20px; color: var(--n-text-color-3); margin: 0; margin-top: 4px;">{{ t('console.pageDesc') }}</p>
+	<div class="page-container">
+        <div class="page-header">
+            <div class="page-header-info">
+                <h2 class="page-title">{{ t('console.pageTitle') }}</h2>
+                <p class="page-desc">{{ t('console.pageDesc') }}</p>
             </div>
             <!-- Action -->
             <n-button
@@ -278,12 +278,12 @@ watch(
             </n-button>
         </div>
 
-		<div style="display: flex; flex-direction: column; gap: 24px;">
+		<div class="flex flex-col gap-6">
 
             <n-flex :wrap="true" style="gap: 24px">
-                <div style="flex: 1; min-width: 320px">
-                    <div style="margin-bottom: 16px;">
-                        <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                <div class="flex-1 min-w-[320px]">
+                    <div class="mb-4">
+                        <h3 class="section-title">
                             {{ t('console.commandsSubtitle') }}
                         </h3>
                     </div>
@@ -317,9 +317,9 @@ watch(
                     </n-flex>
                 </div>
 
-                <div style="flex: 1; min-width: 320px">
-                    <div style="margin-bottom: 16px;">
-                        <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                <div class="flex-1 min-w-[320px]">
+                    <div class="mb-4">
+                        <h3 class="section-title">
                             {{ t('console.resultsSubtitle') }}
                         </h3>
                     </div>

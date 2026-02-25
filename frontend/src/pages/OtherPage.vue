@@ -95,21 +95,21 @@ async function onFormat() {
 </script>
 
 <template>
-    <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px;">
-        <div style="flex: 1; min-width: 0; margin-bottom: 24px;">
-            <h2 style="font-size: 16px; line-height: 24px; font-weight: 600; color: var(--n-text-color); margin: 0;">{{ t('other.pageTitle') }}</h2>
-            <p style="font-size: 13px; line-height: 20px; color: var(--n-text-color-3); margin: 0; margin-top: 4px;">{{ t('other.pageDesc') }}</p>
+    <div class="page-container">
+        <div class="page-header-info mb-6">
+            <h2 class="page-title">{{ t('other.pageTitle') }}</h2>
+            <p class="page-desc">{{ t('other.pageDesc') }}</p>
         </div>
 
         <div>
             <n-flex align="center" justify="space-between" :wrap="false" style="gap: 48px">
                 <div style="flex: 1; min-width: 0;">
-                    <div style="margin-bottom: 4px;">
-                        <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                    <div class="mb-1">
+                        <h3 class="section-title">
                             {{ t('other.lockTitle') }}
                         </h3>
                     </div>
-                    <div style="font-size: 14px; color: var(--n-text-color-3);">{{ t('other.lockDesc') }}</div>
+                    <div class="page-desc">{{ t('other.lockDesc') }}</div>
                 </div>
                 <!-- Action -->
                 <n-button
@@ -127,12 +127,12 @@ async function onFormat() {
         <div>
             <n-flex align="center" justify="space-between" :wrap="false" style="gap: 48px">
                 <div style="flex: 1; min-width: 0;">
-                    <div style="margin-bottom: 4px;">
-                        <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                    <div class="mb-1">
+                        <h3 class="section-title">
                             {{ t('other.formatTitle') }}
                         </h3>
                     </div>
-                    <div style="font-size: 14px; color: var(--n-text-color-3);">{{ t('other.formatDesc') }}</div>
+                    <div class="page-desc">{{ t('other.formatDesc') }}</div>
                 </div>
                 <!-- Action -->
                  <n-button

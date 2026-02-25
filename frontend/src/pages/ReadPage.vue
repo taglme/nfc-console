@@ -371,11 +371,11 @@ function navigateToWrite() {
 </script>
 
 <template>
-    <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 48px;">
-            <div style="flex: 1; min-width: 0;">
-                <h2 style="font-size: 16px; line-height: 24px; font-weight: 600; color: var(--n-text-color); margin: 0;">{{ t('read.pageTitle') }}</h2>
-                <p style="font-size: 13px; line-height: 20px; color: var(--n-text-color-3); margin: 0; margin-top: 4px;">{{ t('read.pageDesc') }}</p>
+    <div class="page-container">
+        <div class="page-header">
+            <div class="page-header-info">
+                <h2 class="page-title">{{ t('read.pageTitle') }}</h2>
+                <p class="page-desc">{{ t('read.pageDesc') }}</p>
             </div>
             <!-- Action -->
             <n-button
@@ -392,8 +392,8 @@ function navigateToWrite() {
         <div>
 
             <div style="margin-bottom: 16px;">
-                <div style="margin-bottom: 16px;">
-                    <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                <div class="mb-4">
+                    <h3 class="section-title">
                         {{ t('read.tags') }}
                     </h3>
                 </div>
@@ -404,7 +404,7 @@ function navigateToWrite() {
                     <div
                         v-for="tag in tags"
                         :key="tag.tag_id"
-                        style="display: grid; grid-template-columns: 80px 1fr; gap: 8px 16px; margin-bottom: 16px;"
+                        class="grid grid-cols-[80px_1fr] gap-x-4 gap-y-2 mb-4 text-[13px]"
                     >
                         <n-text depth="3">{{ t('read.uid') }}</n-text>
                         <n-text>{{ tag.uid ? base64ToHex(tag.uid) : '–' }}</n-text>
@@ -425,7 +425,7 @@ function navigateToWrite() {
                 <n-flex vertical size="medium">
                     <n-flex align="center" justify="space-between" :wrap="false" style="margin-bottom: 8px;">
                         <n-flex align="center" :wrap="false" style="gap: 8px;">
-                            <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                            <h3 class="section-title">
                                 {{ t('read.ndef') }}
                             </h3>
                             <n-tag :bordered="false" size="small" :type="ndef.read_only ? 'default' : 'success'" :style="ndef.read_only ? { borderRadius: '6px', backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#fafafc', color: 'var(--n-text-color-3)' } : { borderRadius: '6px' }">
