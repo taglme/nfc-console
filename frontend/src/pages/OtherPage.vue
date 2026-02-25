@@ -95,15 +95,21 @@ async function onFormat() {
 </script>
 
 <template>
-    <n-flex vertical size="large">
-        <n-card :bordered="false" content-style="padding: 24px;">
-            <n-flex align="center" :wrap="false" style="gap: 24px">
-                <n-icon size="40">
-                    <LockClosedOutline />
-                </n-icon>
-                <div style="flex: 1">
-                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('other.lockTitle') }}</div>
-                    <n-text depth="3">{{ t('other.lockDesc') }}</n-text>
+    <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px;">
+        <div style="flex: 1; min-width: 0; margin-bottom: 24px;">
+            <h2 style="font-size: 16px; line-height: 24px; font-weight: 600; color: var(--n-text-color); margin: 0;">{{ t('other.pageTitle') }}</h2>
+            <p style="font-size: 13px; line-height: 20px; color: var(--n-text-color-3); margin: 0; margin-top: 4px;">{{ t('other.pageDesc') }}</p>
+        </div>
+
+        <div>
+            <n-flex align="center" justify="space-between" :wrap="false" style="gap: 48px">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="margin-bottom: 4px;">
+                        <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                            {{ t('other.lockTitle') }}
+                        </h3>
+                    </div>
+                    <div style="font-size: 14px; color: var(--n-text-color-3);">{{ t('other.lockDesc') }}</div>
                 </div>
                 <!-- Action -->
                 <n-button
@@ -116,16 +122,17 @@ async function onFormat() {
                     {{ t('other.lock') }}
                 </n-button>
             </n-flex>
-        </n-card>
+        </div>
 
-        <n-card :bordered="false" content-style="padding: 24px;">
-            <n-flex align="center" :wrap="false" style="gap: 24px">
-                <n-icon size="40">
-                    <TrashOutline />
-                </n-icon>
-                <div style="flex: 1">
-                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('other.formatTitle') }}</div>
-                    <n-text depth="3">{{ t('other.formatDesc') }}</n-text>
+        <div>
+            <n-flex align="center" justify="space-between" :wrap="false" style="gap: 48px">
+                <div style="flex: 1; min-width: 0;">
+                    <div style="margin-bottom: 4px;">
+                        <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                            {{ t('other.formatTitle') }}
+                        </h3>
+                    </div>
+                    <div style="font-size: 14px; color: var(--n-text-color-3);">{{ t('other.formatDesc') }}</div>
                 </div>
                 <!-- Action -->
                  <n-button
@@ -138,7 +145,7 @@ async function onFormat() {
                     {{ t('other.format') }}
                 </n-button>
             </n-flex>
-        </n-card>
+        </div>
 
-    </n-flex>
+    </div>
 </template>

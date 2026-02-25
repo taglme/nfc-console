@@ -417,30 +417,30 @@ onMounted(() => {
 </script>
 
 <template>
-    <n-flex vertical size="large">
-        <n-card :bordered="false" content-style="padding: 24px;">
-            <n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
-                <n-icon size="40">
-                    <CreateOutline />
-                </n-icon>
-                <div style="flex: 1">
-                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('write.pageTitle') }}</div>
-                    <n-text depth="3">{{ t('write.pageDesc') }}</n-text>
-                </div>
-                <!-- Action -->
-                <n-button
-                    type="primary"
-                    :disabled="!canWrite"
-                    :loading="sending"
-                    @click="onWrite"
-                    style="min-width: 120px"
-                >
-                    {{ t('write.write') }}
-                </n-button>
-            </n-flex>
+    <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 48px;">
+            <div style="flex: 1; min-width: 0;">
+                <h2 style="font-size: 16px; line-height: 24px; font-weight: 600; color: var(--n-text-color); margin: 0;">{{ t('write.pageTitle') }}</h2>
+                <p style="font-size: 13px; line-height: 20px; color: var(--n-text-color-3); margin: 0; margin-top: 4px;">{{ t('write.pageDesc') }}</p>
+            </div>
+            <!-- Action -->
+            <n-button
+                type="primary"
+                :disabled="!canWrite"
+                :loading="sending"
+                @click="onWrite"
+                style="min-width: 120px"
+            >
+                {{ t('write.write') }}
+            </n-button>
+        </div>
 
-            <div style="margin-bottom: 8px;">
-                <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('write.recordsSubtitle') }}</n-text>
+        <div>
+
+            <div style="margin-bottom: 16px;">
+                <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                    {{ t('write.recordsSubtitle') }}
+                </h3>
             </div>
             
             <n-flex align="center" :wrap="true" style="gap: 8px; margin-bottom: 24px;">
@@ -479,7 +479,7 @@ onMounted(() => {
                                             <circle cx="15" cy="18" r="1.5" fill="currentColor" />
                                         </svg>
                                     </n-icon>
-                                    <n-icon size="18" style="margin-right: -4px"><component :is="getRecordIcon(r.type)" /></n-icon>
+                                    <n-icon size="18" style="margin-right: -4px; color: var(--app-primary-color)"><component :is="getRecordIcon(r.type)" /></n-icon>
                                     <div style="width: 170px; flex-shrink: 0;"><n-text strong>{{ t('recordModals.' + r.type + '.modal_title') }}</n-text></div>
                                     <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"><n-text depth="3">{{ recordSummary(r) }}</n-text></div>
                                 </n-flex>
@@ -498,11 +498,13 @@ onMounted(() => {
                 </draggable>
             </div>
 
-            <div style="margin-bottom: 12px;">
-                <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('write.settingsSubtitle') }}</n-text>
+            <div style="margin-bottom: 16px;">
+                <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                    {{ t('write.settingsSubtitle') }}
+                </h3>
             </div>
             <n-checkbox v-model:checked="permanentLock">{{ t('write.permanentLock') }}</n-checkbox>
-        </n-card>
+        </div>
 
         <n-modal v-model:show="modalOpen" preset="card" :title="t('write.modalTitle')" style="width: 720px">
             <n-form label-placement="top">
@@ -615,5 +617,5 @@ onMounted(() => {
                 </n-flex>
             </n-form>
         </n-modal>
-    </n-flex>
+    </div>
 </template>

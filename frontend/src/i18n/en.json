@@ -16,7 +16,8 @@
     "write": "Write",
     "dump": "Dump",
     "other": "Other",
-    "theme": "Theme"
+    "themeLight": "Light Theme",
+    "themeDark": "Dark Theme"
   },
   "common": {
     "apply": "Apply",
@@ -95,7 +96,7 @@
     "pageDesc": "Read NDEF message and tag information.",
     "read": "Read",
     "recordsView": "View",
-    "tags": "Tags",
+    "tags": "Tag information",
     "ndef": "NDEF",
     "noNdef": "No NDEF data.",
     "access": "Access",
@@ -147,6 +148,8 @@
   },
   "other": {
     "title": "Other",
+    "pageTitle": "Other operations",
+    "pageDesc": "Perform additional operations with NFC tags",
     "lockTitle": "Lock tag",
     "lockDesc": "Permanently lock the tag (irreversible).",
     "lock": "Lock",

@@ -371,39 +371,31 @@ function navigateToWrite() {
 </script>
 
 <template>
-    <n-flex vertical size="large">
-        <n-card :bordered="false" content-style="padding: 24px;">
-            <n-flex
-                align="center"
-                justify="space-between"
-                :wrap="false"
-                style="gap: 16px; margin-bottom: 24px; height: 88px;"
+    <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 48px;">
+            <div style="flex: 1; min-width: 0;">
+                <h2 style="font-size: 16px; line-height: 24px; font-weight: 600; color: var(--n-text-color); margin: 0;">{{ t('read.pageTitle') }}</h2>
+                <p style="font-size: 13px; line-height: 20px; color: var(--n-text-color-3); margin: 0; margin-top: 4px;">{{ t('read.pageDesc') }}</p>
+            </div>
+            <!-- Action -->
+            <n-button
+                type="primary"
+                :disabled="!canRead"
+                :loading="sending"
+                @click="onRead"
+                style="min-width: 120px"
             >
-                <n-flex align="center" :wrap="false" style="gap: 24px; min-width: 0; flex: 1;">
-                    <n-icon size="40">
-                        <SearchOutline />
-                    </n-icon>
-                    <div style="flex: 1; min-width: 0;">
-                        <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('read.pageTitle') }}</div>
-                        <n-text depth="3">{{ t('read.pageDesc') }}</n-text>
-                    </div>
-                </n-flex>
+                {{ t('read.read') }}
+            </n-button>
+        </div>
 
-                <!-- Action -->
-                <n-button
-                    type="primary"
-                    :disabled="!canRead"
-                    :loading="sending"
-                    @click="onRead"
-                    style="min-width: 120px"
-                >
-                    {{ t('read.read') }}
-                </n-button>
-            </n-flex>
+        <div>
 
             <div style="margin-bottom: 16px;">
-                <div style="margin-bottom: 8px;">
-                    <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('read.tags') }}</n-text>
+                <div style="margin-bottom: 16px;">
+                    <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                        {{ t('read.tags') }}
+                    </h3>
                 </div>
                 
                 <n-empty v-if="!tags.length" :description="t('common.noData')" style="margin-top: 24px; margin-bottom: 16px;" />
@@ -433,7 +425,9 @@ function navigateToWrite() {
                 <n-flex vertical size="medium">
                     <n-flex align="center" justify="space-between" :wrap="false" style="margin-bottom: 8px;">
                         <n-flex align="center" :wrap="false" style="gap: 8px;">
-                            <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('read.ndef') }}</n-text>
+                            <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                                {{ t('read.ndef') }}
+                            </h3>
                             <n-tag :bordered="false" size="small" :type="ndef.read_only ? 'default' : 'success'" :style="ndef.read_only ? { borderRadius: '6px', backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : '#fafafc', color: 'var(--n-text-color-3)' } : { borderRadius: '6px' }">
                                 {{ ndef.read_only ? t('read.accessReadOnly') : t('read.accessReadWrite') }}
                             </n-tag>
@@ -461,7 +455,7 @@ function navigateToWrite() {
                                 <td style="white-space: nowrap;">{{ idx + 1 }}</td>
                                 <td style="overflow: hidden;">
                                     <n-flex align="center" :wrap="false" style="gap: 10px; width: 100%; min-width: 0;">
-                                        <n-icon size="18" style="flex-shrink: 0;">
+                                        <n-icon size="18" style="flex-shrink: 0; color: var(--app-primary-color)">
                                             <component :is="recordIcon(r.type)" />
                                         </n-icon>
                                         <n-text style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;">
@@ -474,7 +468,7 @@ function navigateToWrite() {
                     </n-table>
                 </n-flex>
             </div>
-        </n-card>
+        </div>
 
         <n-modal
             v-model:show="recordModalOpen"
@@ -508,5 +502,5 @@ function navigateToWrite() {
 
             </template>
         </n-modal>
-    </n-flex>
+    </div>
 </template>

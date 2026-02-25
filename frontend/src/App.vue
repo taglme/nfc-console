@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onMounted, ref, h, Component } from 'vue';
+import { computed, onMounted, ref, h, type Component } from 'vue';
 import {
   NButton,
   NConfigProvider,
@@ -197,16 +197,22 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => {
     Input: {
       border: '1px solid transparent',
       borderHover: '1px solid transparent',
-      color: 'var(--n-border-color)',
-      colorFocus: 'var(--n-border-color)',
+      borderFocus: '1px solid transparent',
+      color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+      colorFocus: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.07)',
+      boxShadowFocus: 'none',
     },
     Select: {
       peers: {
         InternalSelection: {
           border: '1px solid transparent',
           borderHover: '1px solid transparent',
-          color: 'var(--n-border-color)',
-          colorActive: 'var(--n-border-color)',
+          borderFocus: '1px solid transparent',
+          borderActive: '1px solid transparent',
+          color: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+          colorActive: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.07)',
+          boxShadowFocus: 'none',
+          boxShadowActive: 'none',
         }
       }
     }
@@ -471,7 +477,7 @@ onMounted(async () => {
                <template #icon>
                   <n-icon size="22" :component="settings.theme === 'dark' ? SunnyOutline : MoonOutline" />
                </template>
-               <span v-if="!isCollapsed" style="margin-left: 8px;">{{ t('menu.theme') }}</span>
+               <span v-if="!isCollapsed" style="margin-left: 8px;">{{ settings.theme === 'dark' ? t('menu.themeLight') : t('menu.themeDark') }}</span>
             </n-button>
           </div>
         </n-layout-sider>
@@ -482,12 +488,16 @@ onMounted(async () => {
 
 
           <n-layout-content
-              :content-style="{ padding: '24px', paddingBottom: '32px', backgroundColor: settings.theme === 'dark' ? '#101014' : '#f5f5f5', minHeight: '100%' }"
+              :content-style="{ padding: '24px', paddingBottom: '32px', backgroundColor: settings.theme === 'dark' ? '#18181c' : '#ffffff', minHeight: '100%' }"
               :native-scrollbar="false"
               style="flex: 1; overflow: hidden;"
           >
             <div style="max-width: 1200px; margin: 0 auto; width: 100%;">
-                <router-view />
+                <router-view v-slot="{ Component }">
+                  <keep-alive>
+                    <component :is="Component" />
+                  </keep-alive>
+                </router-view>
             </div>
           </n-layout-content>
 

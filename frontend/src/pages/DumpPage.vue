@@ -150,30 +150,30 @@ async function onDump() {
 </script>
 
 <template>
-    <n-flex vertical size="large">
-        <n-card :bordered="false" content-style="padding: 24px;">
-            <n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
-                <n-icon size="40">
-                    <CopyOutline />
-                </n-icon>
-                <div style="flex: 1">
-                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('dump.pageTitle') }}</div>
-                    <n-text depth="3">{{ t('dump.pageDesc') }}</n-text>
-                </div>
-                <!-- Action -->
-                <n-button
-                    type="primary"
-                    :disabled="!canDump"
-                    :loading="sending"
-                    @click="onDump"
-                    style="min-width: 120px"
-                >
-                    {{ t('dump.scan') }}
-                </n-button>
-            </n-flex>
+    <div style="padding: 24px; display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 48px;">
+            <div style="flex: 1; min-width: 0;">
+                <h2 style="font-size: 16px; line-height: 24px; font-weight: 600; color: var(--n-text-color); margin: 0;">{{ t('dump.pageTitle') }}</h2>
+                <p style="font-size: 13px; line-height: 20px; color: var(--n-text-color-3); margin: 0; margin-top: 4px;">{{ t('dump.pageDesc') }}</p>
+            </div>
+            <!-- Action -->
+            <n-button
+                type="primary"
+                :disabled="!canDump"
+                :loading="sending"
+                @click="onDump"
+                style="min-width: 120px"
+            >
+                {{ t('dump.scan') }}
+            </n-button>
+        </div>
 
-            <div style="margin-bottom: 8px;">
-                <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('dump.memorySubtitle') }}</n-text>
+        <div>
+
+            <div style="margin-bottom: 16px;">
+                <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                    {{ t('dump.memorySubtitle') }}
+                </h3>
             </div>
             
             <n-flex align="center" :wrap="true" style="gap: 8px; margin-bottom: 12px;">
@@ -194,6 +194,6 @@ async function onDump() {
                 <n-text depth="3">{{ t('dump.output') }}:</n-text>
                 <n-select v-model:value="outputMode" :options="outputOptions" style="width: 180px" />
             </n-flex>
-        </n-card>
-    </n-flex>
+        </div>
+    </div>
 </template>

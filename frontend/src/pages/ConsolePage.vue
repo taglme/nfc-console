@@ -260,32 +260,32 @@ watch(
 </script>
 
 <template>
-	<n-flex vertical size="large">
-		<n-card :bordered="false" content-style="padding: 24px;">
-			<n-flex align="center" :wrap="false" style="gap: 24px; margin-bottom: 24px;">
-                <n-icon size="40">
-                    <TerminalOutline />
-                </n-icon>
-                <div style="flex: 1">
-                    <div style="font-weight: 600; font-size: 16px; margin-bottom: 4px;">{{ t('console.pageTitle') }}</div>
-                    <n-text depth="3">{{ t('console.pageDesc') }}</n-text>
-                </div>
-                <!-- Action -->
-                <n-button
-                    type="primary"
-                    :disabled="!canSend"
-                    :loading="sending"
-                    @click="send"
-                    style="min-width: 120px"
-                >
-                    {{ t('console.send') }}
-                </n-button>
-			</n-flex>
+	<div style="padding: 24px; display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 48px;">
+            <div style="flex: 1; min-width: 0;">
+                <h2 style="font-size: 16px; line-height: 24px; font-weight: 600; color: var(--n-text-color); margin: 0;">{{ t('console.pageTitle') }}</h2>
+                <p style="font-size: 13px; line-height: 20px; color: var(--n-text-color-3); margin: 0; margin-top: 4px;">{{ t('console.pageDesc') }}</p>
+            </div>
+            <!-- Action -->
+            <n-button
+                type="primary"
+                :disabled="!canSend"
+                :loading="sending"
+                @click="send"
+                style="min-width: 120px"
+            >
+                {{ t('console.send') }}
+            </n-button>
+        </div>
+
+		<div style="display: flex; flex-direction: column; gap: 24px;">
 
             <n-flex :wrap="true" style="gap: 24px">
                 <div style="flex: 1; min-width: 320px">
-                    <div style="margin-bottom: 8px;">
-                        <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('console.commandsSubtitle') }}</n-text>
+                    <div style="margin-bottom: 16px;">
+                        <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                            {{ t('console.commandsSubtitle') }}
+                        </h3>
                     </div>
                     
                     <n-flex :wrap="false" style="gap: 8px; margin-bottom: 12px;">
@@ -318,8 +318,10 @@ watch(
                 </div>
 
                 <div style="flex: 1; min-width: 320px">
-                    <div style="margin-bottom: 8px;">
-                        <n-text depth="2" style="font-size: 16px; font-weight: 400">{{ t('console.resultsSubtitle') }}</n-text>
+                    <div style="margin-bottom: 16px;">
+                        <h3 style="font-size: 14px; font-weight: 600; color: var(--n-text-color); margin: 0; text-transform: uppercase; letter-spacing: 0.025em;">
+                            {{ t('console.resultsSubtitle') }}
+                        </h3>
                     </div>
 
                     <n-flex :wrap="false" style="gap: 8px; margin-bottom: 12px;">
@@ -373,7 +375,7 @@ watch(
                     </n-list>
                 </n-flex>
             </n-modal>
-        </n-card>
+        </div>
         
         <input
             ref="fileInputRef"
@@ -382,5 +384,5 @@ watch(
             style="display: none"
             @change="onLoadCommandsSelected"
         />
-    </n-flex>
+    </div>
 </template>
