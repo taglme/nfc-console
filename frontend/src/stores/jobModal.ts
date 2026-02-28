@@ -43,7 +43,13 @@ export const useJobModalStore = defineStore('jobModal', {
 
         timeoutMs: 2000,
         timeoutHandle: 0 as any,
+        pollHandle: 0 as any,
         loadingCounters: false,
+
+        baselineLoaded: false,
+        baselineTotalRuns: 0,
+        baselineSuccessRuns: 0,
+        baselineErrorRuns: 0,
     }),
 
     actions: {
@@ -56,9 +62,15 @@ export const useJobModalStore = defineStore('jobModal', {
             this.status = 'pending';
             this.errorMessage = '';
             this.counters = { total_runs: 0, success_runs: 0, error_runs: 0, repeat: 0 };
+            this.baselineLoaded = true;
+            this.baselineTotalRuns = 0;
+            this.baselineSuccessRuns = 0;
+            this.baselineErrorRuns = 0;
 
             this.clearTimeout();
+            this.stopPolling();
             void this.refreshCounters();
+            this.startPolling();
         },
 
         async close(reason?: 'user' | 'auto') {
@@ -69,6 +81,7 @@ export const useJobModalStore = defineStore('jobModal', {
             const jobId = this.jobId;
 
             this.open = false;
+            this.stopPolling();
 
             // Match original app behavior: if the user closes while pending/activated,
             // try to delete the job to avoid leaving it running.
@@ -86,6 +99,21 @@ export const useJobModalStore = defineStore('jobModal', {
             if (this.timeoutHandle) {
                 clearTimeout(this.timeoutHandle);
                 this.timeoutHandle = 0;
+            }
+        },
+
+        startPolling() {
+            this.stopPolling();
+            this.pollHandle = setInterval(() => {
+                if (!this.open) return;
+                void this.refreshCounters();
+            }, 1000);
+        },
+
+        stopPolling() {
+            if (this.pollHandle) {
+                clearInterval(this.pollHandle);
+                this.pollHandle = 0;
             }
         },
 
@@ -110,8 +138,43 @@ export const useJobModalStore = defineStore('jobModal', {
                 this.counters.success_runs = (job as any).successRuns ?? (job as any).success_runs ?? 0;
                 this.counters.error_runs = (job as any).errorRuns ?? (job as any).error_runs ?? 0;
                 this.counters.repeat = (job as any).repeat ?? 0;
+
+                if (!this.baselineLoaded) {
+                    this.baselineLoaded = true;
+                    this.baselineTotalRuns = this.counters.total_runs;
+                    this.baselineSuccessRuns = this.counters.success_runs;
+                    this.baselineErrorRuns = this.counters.error_runs;
+                    return;
+                }
+
+                const totalDelta = this.counters.total_runs - this.baselineTotalRuns;
+                const successDelta = this.counters.success_runs - this.baselineSuccessRuns;
+                const errorDelta = this.counters.error_runs - this.baselineErrorRuns;
+
+                if (totalDelta > 0) {
+                    if (successDelta > 0 && (this.status === 'activated' || this.status === 'pending')) {
+                        this.status = 'finished';
+                        this.returnToPendingLater();
+                    } else if (errorDelta > 0 && (this.status === 'activated' || this.status === 'pending')) {
+                        this.status = 'error';
+                        if (!this.errorMessage) this.errorMessage = 'operation_failed';
+                        this.returnToPendingLater();
+                    } else if (this.status === 'activated' || this.status === 'pending') {
+                        this.status = 'finished';
+                        this.returnToPendingLater();
+                    }
+
+                    const repeat = Number(this.counters.repeat || 0);
+                    if (repeat > 0 && totalDelta >= repeat) {
+                        void this.close('auto');
+                    }
+
+                    this.baselineTotalRuns = this.counters.total_runs;
+                    this.baselineSuccessRuns = this.counters.success_runs;
+                    this.baselineErrorRuns = this.counters.error_runs;
+                }
             } catch {
-                // ignore
+                // ignore expected 404 when one-shot job is already finished and removed
             } finally {
                 this.loadingCounters = false;
             }
